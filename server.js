@@ -24,9 +24,9 @@ const getDB = () => {
 const saveDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 
 // --- 2. Global Middleware ---
-app.use(express.json()); // Parses incoming JSON bodies
+app.use(express.json());
 
-// --- 3. API Routes (Specific routes go FIRST) ---
+// --- 3. API Routes ---
 
 // Setup: Create a new user
 app.post('/api/setup/create-user', async (req, res) => {
@@ -39,12 +39,10 @@ app.post('/api/setup/create-user', async (req, res) => {
     try {
         const db = getDB();
         
-        // Check if user already exists
         if (db.users.find(u => u.username === username)) {
             return res.status(400).json({ success: false, message: "User already exists" });
         }
 
-        // Hash the password before saving
         const hashedPassword = await bcrypt.hash(password, 10);
         
         db.users.push({
@@ -84,24 +82,49 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// --- 4. Static Files & Frontend Routing ---
+// --- 4. Self-Executing Setup (The "Curl" Implementation) ---
+// This function runs when the server starts to ensure your CEO user exists.
+const autoSetupCEO = async () => {
+    const adminData = {
+        username: "Zoqzon",
+        password: "Root4090",
+        role: "CEO"
+    };
 
-// Serve static assets (js, css, images) from the public folder
+    try {
+        // We call our own API internally
+        const response = await fetch(`http://localhost:${PORT}/api/setup/create-user`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(adminData)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            console.log("✅ Auto-Setup: CEO account initialized.");
+        }
+    } catch (err) {
+        // Silently fail if server isn't up yet or user exists
+    }
+};
+
+// --- 5. Static Files & Frontend Routing ---
 app.use(express.static(path.join(__dirname)));
 
-// Catch-all: Send index.html for any other requests (SPA support)
-// Using the Node 20+/path-to-regexp v8 compatible syntax
-app.get('{*path}', (req, res) => {
-const indexPath = path.join(__dirname, 'index.html');
+app.get('*', (req, res) => {
+    const indexPath = path.join(__dirname, 'index.html');
     if (fs.existsSync(indexPath)) {
         res.sendFile(indexPath);
     } else {
-        res.status(404).send("Error: index.html not found in public folder.");
+        res.status(404).send("Error: index.html not found.");
     }
 });
 
-// --- 5. Start Server ---
+// --- 6. Start Server ---
 app.listen(PORT, () => {
-    console.log(`\n🚀 Server is running at: https://tek-studios.onrender.com`);
+    console.log(`\n🚀 Server is running at: http://localhost:${PORT}`);
     console.log(`📂 Database located at: ${DB_FILE}\n`);
+    
+    // Run the auto-setup after a small delay to ensure server is listening
+    setTimeout(autoSetupCEO, 2000);
 });
