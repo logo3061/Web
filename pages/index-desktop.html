@@ -185,169 +185,197 @@
         </div>
     </div>
 
-    <script>
-        const bcrypt = dcodeIO.bcrypt;
-        let cachedGames = [];
+   <script>
+    // Note: We no longer need bcrypt on the frontend because the SERVER handles the hashing now.
+    let cachedGames = [];
 
-        // 10-Point Status Map
+    const statusMap = {
+        "operational":  { color: "#10b981", label: "Operational" },
+        "active":       { color: "#10b981", label: "Active" },
+        "paused":       { color: "#64748b", label: "Paused" },
+        "standby":      { color: "#64748b", label: "Standby" },
+        "maintenance":  { color: "#f59e0b", label: "Maintenance" },
+        "updating":     { color: "#f59e0b", label: "Updating" },
+        "testing":      { color: "#0ea5e9", label: "Testing" },
+        "beta":         { color: "#0ea5e9", label: "Beta" },
+        "patched":      { color: "#6366f1", label: "Patched" },
+        "disabled":     { color: "#ef4444", label: "Disabled" },
+        "terminated":   { color: "#ef4444", label: "Terminated" },
+        "review":       { color: "#a855f7", label: "Under Review" },
+        "secure":       { color: "#14b8a6", label: "Secure" },
+        "experimental": { color: "#f43f5e", label: "Experimental" },
+        "offline":      { color: "#27272a", label: "Offline" }
+    };
+
+    // --- UPDATED AUTH ---
+    async function validateLogin() {
+        const username = document.getElementById('user-input').value;
+        const password = document.getElementById('pass-input').value;
+        
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            
+            const result = await res.json();
+
+            if (result.success) {
+                Cookies.set('tek_session', result.username, { expires: 7 });
+                revealUI();
+            } else {
+                const errEl = document.getElementById('login-err');
+                errEl.innerText = "Access Denied: " + result.message;
+                errEl.style.opacity = '1';
+            }
+        } catch (e) {
+            console.error("Login Error:", e);
+            alert("Connection to Databank Failed.");
+        }
+    }
+
+    function revealUI() {
+        document.getElementById('login-overlay').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('login-overlay').style.display = 'none';
+            const main = document.getElementById('main-content');
+            main.classList.remove('hidden');
+            setTimeout(() => main.style.opacity = '1', 50);
+            loadAllData();
+        }, 700);
+    }
+
+    function logout() { 
+        Cookies.remove('tek_session'); 
+        location.reload(); 
+    }
+
+   async function loadAllData() {
+    try {
+        // 1. Use /api/ prefix and absolute paths to ensure it hits your Express routes
+        const [nRes, gRes, dRes] = await Promise.all([
+            fetch('/api/news'), 
+            fetch('/api/projects'), 
+            fetch('/api/downloads')
+        ]);
+        
+        // Check if responses are okay before parsing
+        if (!nRes.ok || !gRes.ok || !dRes.ok) throw new Error("API Response Error");
+
+        const news = await nRes.json();
+        const projects = await gRes.json();
+        const downloads = await dRes.json();
+
+        // 2. Define statusMap for the Projects Logic (if not already defined globally)
         const statusMap = {
-            "operational":  { color: "#10b981", label: "Operational" },
-            "active":       { color: "#10b981", label: "Active" },
-            "paused":       { color: "#64748b", label: "Paused" },
-            "standby":      { color: "#64748b", label: "Standby" },
-            "maintenance":  { color: "#f59e0b", label: "Maintenance" },
-            "updating":     { color: "#f59e0b", label: "Updating" },
-            "testing":      { color: "#0ea5e9", label: "Testing" },
-            "beta":         { color: "#0ea5e9", label: "Beta" },
-            "patched":      { color: "#6366f1", label: "Patched" },
-            "disabled":     { color: "#ef4444", label: "Disabled" },
-            "terminated":   { color: "#ef4444", label: "Terminated" },
-            "review":       { color: "#a855f7", label: "Under Review" },
-            "secure":       { color: "#14b8a6", label: "Secure" },
-            "experimental": { color: "#f43f5e", label: "Experimental" },
-            "offline":      { color: "#27272a", label: "Offline" }
+            "operational": { color: "#4ade80", label: "Operational" },
+            "maintenance": { color: "#fbbf24", label: "Maintenance" },
+            "offline": { color: "#ef4444", label: "Offline" }
         };
 
-        // --- AUTH ---
-        async function validateLogin() {
-            const u = document.getElementById('user-input').value;
-            const p = document.getElementById('pass-input').value;
-            try {
-                const res = await fetch('/db.json');
-                const data = await res.json();
-                const user = data.users.find(usr => usr.username.toLowerCase() === u.toLowerCase());
-                if (user && bcrypt.compareSync(p, user.password)) {
-                    Cookies.set('tek_session', user.username, { expires: 7 });
-                    revealUI();
-                } else {
-                    document.getElementById('login-err').style.opacity = '1';
-                }
-            } catch (e) { revealUI(); } // Bypass for local environment
-        }
+        // 3. News Logic - Updated n.description to n.content to match your Supabase fix
+        document.getElementById('news-grid').innerHTML = news.map(n => `
+            <div class="sirius-card p-10 rounded-[35px] reveal">
+                <span class="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
+                    ${n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Update'}
+                </span>
+                <h4 class="font-bold text-lg mt-3 mb-4 tracking-tight">${n.title}</h4>
+                <p class="text-[11px] text-zinc-500 leading-relaxed">${n.content || 'No content provided.'}</p>
+            </div>`).join('');
 
-        function revealUI() {
-            document.getElementById('login-overlay').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('login-overlay').style.display = 'none';
-                const main = document.getElementById('main-content');
-                main.classList.remove('hidden');
-                setTimeout(() => main.style.opacity = '1', 50);
-                loadAllData();
-            }, 700);
-        }
+        // 4. Projects Logic
+        document.getElementById('game-grid').innerHTML = projects.map((g, i) => {
+            const status = (g.status || "offline").toLowerCase();
+            const config = statusMap[status] || statusMap["offline"];
+            return `
+            <div onclick="openModal(${i})" class="sirius-card p-6 rounded-[30px] cursor-pointer group reveal">
+                <div class="h-44 bg-zinc-900 rounded-[22px] overflow-hidden mb-6">
+                    <img src="${g.imageurl || 'https://via.placeholder.com/400'}" 
+                         class="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700">
+                </div>
+                <h4 class="font-bold text-sm px-2 mb-1">${g.title}</h4>
+                <div class="flex items-center gap-2 px-2 mt-2">
+                    <div class="w-1.5 h-1.5 rounded-full" style="background-color: ${config.color}"></div>
+                    <span class="text-[9px] font-bold uppercase tracking-widest" style="color: ${config.color}">${config.label}</span>
+                </div>
+            </div>`;
+        }).join('');
 
-        function logout() { Cookies.remove('tek_session'); location.reload(); }
+        // 5. Downloads Logic
+        document.getElementById('downloads-grid').innerHTML = downloads.map(d => `
+            <div class="sirius-card p-6 rounded-[25px] flex items-center justify-between reveal">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5m0 0l5-5m-5 5V3"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-xs text-zinc-300">${d.name}</h4>
+                        <p class="text-[9px] text-zinc-600 font-mono mt-0.5">${d.version || 'v1.0'}</p>
+                    </div>
+                </div>
+                <a href="${d.url}" download class="bg-white text-black text-[9px] font-black px-5 py-2.5 rounded-xl hover:bg-zinc-200 transition-all uppercase">Download</a>
+            </div>`).join('');
 
-        // --- DATA ---
-        async function loadAllData() {
-            try {
-                const [nRes, gRes, dRes] = await Promise.all([
-                    fetch('data/news.json'), fetch('data/games.json'), fetch('data/downloads.json')
-                ]);
-                
-                const news = await nRes.json();
-                cachedGames = await gRes.json();
-                const downloads = await dRes.json();
+        triggerAnimations();
+    } catch (e) { 
+        console.error("Data Load Failed:", e); 
+    }
+}
 
-                // Announcements
-                document.getElementById('news-grid').innerHTML = news.map(n => `
-                    <div class="sirius-card p-10 rounded-[35px] reveal">
-                        <span class="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">${n.date || 'Staff Update'}</span>
-                        <h4 class="font-bold text-lg mt-3 mb-4 tracking-tight">${n.title}</h4>
-                        <p class="text-[11px] text-zinc-500 leading-relaxed">${n.desc}</p>
-                    </div>`).join('');
+    // Modal and Animation functions remain the same as your code...
+    function triggerAnimations() {
+        const active = document.querySelector('.active-view');
+        if(!active) return;
+        active.querySelectorAll('.reveal').forEach((el, i) => {
+            setTimeout(() => el.classList.add('visible'), i * 80);
+        });
+    }
 
-                // Modules
-                document.getElementById('game-grid').innerHTML = cachedGames.map((g, i) => {
-                    const status = (g.status || "offline").toLowerCase();
-                    const config = statusMap[status] || statusMap["offline"];
-                    return `
-                    <div onclick="openModal(${i})" class="sirius-card p-6 rounded-[30px] cursor-pointer group reveal">
-                        <div class="h-44 bg-zinc-900 rounded-[22px] overflow-hidden mb-6">
-                            <img src="${g.imageurl}" class="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700">
-                        </div>
-                        <h4 class="font-bold text-sm px-2 mb-1">${g.title}</h4>
-                        <div class="flex items-center gap-2 px-2 mt-2">
-                            <div class="w-1.5 h-1.5 rounded-full" style="background-color: ${config.color}"></div>
-                            <span class="text-[9px] font-bold uppercase tracking-widest" style="color: ${config.color}">${config.label}</span>
-                        </div>
-                    </div>`;
-                }).join('');
+    function showPage(id) {
+        document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active-view'));
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        document.getElementById('page-' + id).classList.add('active-view');
+        document.getElementById('nav-' + id).classList.add('active');
+        window.scrollTo({top: 0, behavior: 'smooth'});
+        triggerAnimations();
+    }
 
-                // Vault
-                document.getElementById('downloads-grid').innerHTML = downloads.map(d => `
-                    <div class="sirius-card p-6 rounded-[25px] flex items-center justify-between reveal">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-600">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5m0 0l5-5m-5 5V3"/></svg>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-xs text-zinc-300">${d.name}</h4>
-                                <p class="text-[9px] text-zinc-600 font-mono mt-0.5">${d.version || 'v1.0'}</p>
-                            </div>
-                        </div>
-                        <a href="${d.url}" download class="bg-white text-black text-[9px] font-black px-5 py-2.5 rounded-xl hover:bg-zinc-200 transition-all uppercase">Download</a>
-                    </div>`).join('');
+    function openModal(index) {
+    const g = cachedGames[index];
+    if (!g) return; // Prevent "undefined" error
 
-                triggerAnimations();
-            } catch (e) { console.error(e); }
-        }
+    const status = (g.status || "offline").toLowerCase();
+    const config = statusMap[status] || statusMap["offline"];
 
-        function triggerAnimations() {
-            const active = document.querySelector('.active-view');
-            active.querySelectorAll('.reveal').forEach((el, i) => {
-                setTimeout(() => el.classList.add('visible'), i * 80);
-            });
-        }
+    // Update Modal Content
+    document.getElementById('modal-img').src = g.imageurl || 'https://via.placeholder.com/400';
+    document.getElementById('modal-title').innerText = g.title;
+    document.getElementById('modal-desc').innerText = g.description || "No further details available for this project.";
+    document.getElementById('modal-link').href = g.link || "#";
+    
+    // Update Status Pill
+    document.getElementById('modal-status-dot').style.backgroundColor = config.color;
+    document.getElementById('modal-status-text').style.color = config.color;
+    document.getElementById('modal-status-text').innerText = config.label;
 
-        function showPage(id) {
-            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active-view'));
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('page-' + id).classList.add('active-view');
-            document.getElementById('nav-' + id).classList.add('active');
-            window.scrollTo({top: 0, behavior: 'smooth'});
-            triggerAnimations();
-        }
+    // Show Modal
+    const modal = document.getElementById('project-modal');
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Stop scrolling behind modal
+}
+    function closeModal() {
+        const overlay = document.getElementById('modal-overlay');
+        document.getElementById('modal-content').classList.add('scale-95');
+        setTimeout(() => {
+            overlay.classList.remove('active');
+            overlay.classList.add('hidden');
+        }, 300);
+    }
 
-        // --- MODAL ENGINE ---
-        function openModal(i) {
-            const g = cachedGames[i];
-            const rawStatus = (g.status || "offline").toLowerCase();
-            const config = statusMap[rawStatus] || statusMap["offline"];
-            const isOff = g.link === "Inactive" || g.link === "Disabled" || rawStatus === "disabled" || rawStatus === "terminated";
-            
-            document.getElementById('m-image').src = g.imageurl;
-            document.getElementById('m-title').innerText = g.title;
-            document.getElementById('m-desc').innerText = g.description || g.excerpt || "Operational data restricted.";
-            
-            const dot = document.getElementById('m-status-dot');
-            const text = document.getElementById('m-status-text');
-            dot.style.backgroundColor = config.color;
-            dot.style.boxShadow = `0 0 12px ${config.color}`;
-            text.innerText = config.label;
-            text.style.color = config.color;
-
-            const btn = document.getElementById('m-btn');
-            btn.disabled = isOff;
-            btn.innerText = isOff ? "Access Restricted" : "Initialize Link";
-            btn.onclick = isOff ? null : () => window.open(g.link, '_blank');
-
-            const overlay = document.getElementById('modal-overlay');
-            overlay.classList.remove('hidden');
-            overlay.classList.add('active');
-            setTimeout(() => document.getElementById('modal-content').classList.remove('scale-95'), 10);
-        }
-
-        function closeModal() {
-            const overlay = document.getElementById('modal-overlay');
-            document.getElementById('modal-content').classList.add('scale-95');
-            setTimeout(() => {
-                overlay.classList.remove('active');
-                overlay.classList.add('hidden');
-            }, 300);
-        }
-
-        window.onload = () => { if(Cookies.get('tek_session')) revealUI(); };
-    </script>
+    window.onload = () => { if(Cookies.get('tek_session')) revealUI(); };
+</script>
 </body>
 </html>

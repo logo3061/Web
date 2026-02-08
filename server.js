@@ -1,72 +1,51 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs'); // <--- Add this
 const bcrypt = require('bcryptjs');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
-
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Initialize Supabase (Use your actual URL and Key here)
-const supabase = createClient(
-  process.env.SUPABASE_URL, 
-  process.env.SUPABASE_ANON_KEY
-);
+const supabase = createClient("https://rixeqwlkgczmbvhtjndm.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpeGVxd2xrZ2N6bWJ2aHRqbmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1Njc4OTMsImV4cCI6MjA4NjE0Mzg5M30._4GIn38eww1UQpW9JP1gfDQJXB48Fhluwm--oiA4XaE");
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// --- Shared Logic ---
-const createNewUser = async (username, password, role) => {
-    // Check if user exists
-    const { data: existingUser } = await supabase
-        .from('users')
-        .select('username')
-        .eq('username', username)
-        .single();
-
-    if (existingUser) return { success: false, message: "User already exists" };
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    // Insert into Supabase
-    const { error } = await supabase
-        .from('users')
-        .insert([{ username, password: hashedPassword, role: role || 'user' }]);
-
-    if (error) return { success: false, message: error.message };
-    return { success: true, message: `User ${username} created successfully` };
-};
-
-// --- API Routes ---
-app.post('/api/setup/create-user', async (req, res) => {
-    const { username, password, role } = req.body;
-    const result = await createNewUser(username, password, role);
-    res.status(result.success ? 201 : 400).json(result);
-});
-
+// API: Login
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
-    
-    const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', username)
-        .single();
-
+    const { data: user } = await supabase.from('users').select('*').eq('username', username).single();
     if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
-    res.json({ success: true, role: user.role, username: user.username });
+    res.json({ success: true, username: user.username });
 });
 
-app.get('*', (req, res) => {
+// API: Fetch Data
+app.get('/api/news', async (req, res) => {
+    const { data } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+    res.json(data || []);
+});
+
+app.get('/api/projects', async (req, res) => {
+    const { data } = await supabase.from('projects').select('*');
+    res.json(data || []);
+});
+
+app.get('/api/downloads', async (req, res) => {
+    const { data } = await supabase.from('downloads').select('*');
+    res.json(data || []);
+});
+
+// Catch-all (Express 5 syntax)
+app.get('/*path', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, async () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    // Auto-setup CEO on start
-    const setup = await createNewUser("Zoqzon", "Root4090", "CEO");
-    console.log(setup.success ? "✅ CEO account active." : "ℹ️ CEO check: " + setup.message);
+    console.log(`🚀 Server active on port ${PORT}`);
+    // Auto-create CEO if missing
+    const hp = await bcrypt.hash("Root4090", 10);
+    await supabase.from('users').upsert([{ username: 'Zoqzon', password: hp, role: 'CEO' }], { onConflict: 'username' });
 });
