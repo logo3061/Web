@@ -1,0 +1,126 @@
+:root {
+    /* Obsidian Palette */
+    --bg-deep: #050505;
+    --glass-bg: rgba(15, 15, 15, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-highlight: rgba(255, 255, 255, 0.15);
+    --accent: #ffffff;
+    --text-primary: #f5f5f7;
+    --text-secondary: rgba(245, 245, 247, 0.5);
+    
+    /* Animation Easing */
+    --expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body {
+    background-color: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-x: hidden;
+    /* Subtle noise texture helps the glass look more organic */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    background-size: 150px;
+    background-repeat: repeat;
+    background-blend-mode: overlay;
+}
+
+/* 1. LIQUID BACKGROUND BLOB */
+.liquid-glow {
+    position: fixed;
+    width: 80vw;
+    height: 80vh;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(147, 51, 234, 0.05) 50%, transparent 100%);
+    filter: blur(120px);
+    z-index: -1;
+    animation: pulseGlow 15s infinite alternate var(--expo);
+}
+
+/* 2. PREMIUM DARK GLASS */
+.glass-pane {
+    background: var(--glass-bg);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    transition: all 0.5s var(--expo);
+}
+
+.glass-pane:hover {
+    border-color: var(--glass-highlight);
+    transform: translateY(-2px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* 3. LIQUID BUTTONS (Dark Chrome Style) */
+.liquid-btn-dark {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s var(--expo);
+}
+
+.liquid-btn-dark::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    transition: 0.5s;
+}
+
+.liquid-btn-dark:hover::before {
+    left: 100%;
+}
+
+.liquid-btn-dark:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--glass-highlight);
+    transform: scale(1.02);
+}
+
+/* 4. ANIMATIONS */
+@keyframes slideUpFade {
+    from { opacity: 0; transform: translateY(30px) scale(0.98); filter: blur(10px); }
+    to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+.animate-in {
+    animation: slideUpFade 1.2s var(--expo) forwards;
+}
+
+@keyframes pulseGlow {
+    from { transform: translate(-10%, -10%) scale(1); }
+    to { transform: translate(10%, 10%) scale(1.2); }
+}
+
+/* Smooth Navigation Marker */
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+    box-shadow: 0 0 10px var(--accent);
+    animation: growWidth 0.4s var(--expo);
+}
+
+@keyframes growWidth {
+    from { width: 0; }
+    to { width: 20px; }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { 
+    background: var(--glass-border); 
+    border-radius: 10px;
+    border: 2px solid var(--bg-deep);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--glass-highlight); }
