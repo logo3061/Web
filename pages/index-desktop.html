@@ -253,7 +253,7 @@
         const mockDownloads = [{name: "Staff SDK", url: "#", version: "v4.2.0"}];
 
         try {
-            const [nRes, gRes, dRes] = await Promise.all([ fetch('/api/news'), fetch('/api/projects'), fetch('/api/downloads') ]);
+            const [nRes, gRes, dRes] = await Promise.all([ fetch('/api/news'), fetch('/api/games'), fetch('/api/downloads') ]);
             const news = await nRes.json();
             cachedGames = await gRes.json();
             renderData(news, cachedGames, await dRes.json());
