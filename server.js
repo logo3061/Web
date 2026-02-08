@@ -1,1 +1,109 @@
-const _0x2d7461=_0x201b;(function(_0x44ffc4,_0x53a7ec){const _0x53f6bc=_0x201b,_0x470782=_0x44ffc4();while(!![]){try{const _0x3ec446=parseInt(_0x53f6bc(0x1bd))/0x1*(-parseInt(_0x53f6bc(0x1a8))/0x2)+-parseInt(_0x53f6bc(0x1b7))/0x3+parseInt(_0x53f6bc(0x1b5))/0x4*(-parseInt(_0x53f6bc(0x19e))/0x5)+-parseInt(_0x53f6bc(0x1b6))/0x6+parseInt(_0x53f6bc(0x1b9))/0x7+-parseInt(_0x53f6bc(0x1a7))/0x8+-parseInt(_0x53f6bc(0x1b8))/0x9*(-parseInt(_0x53f6bc(0x1c0))/0xa);if(_0x3ec446===_0x53a7ec)break;else _0x470782['push'](_0x470782['shift']());}catch(_0x2ec98d){_0x470782['push'](_0x470782['shift']());}}}(_0x36e5,0x3d496));const express=require('express'),path=require(_0x2d7461(0x1b1)),fs=require('fs'),bcrypt=require('bcryptjs'),{createClient}=require(_0x2d7461(0x1ab));function _0x201b(_0x524d3a,_0x1edc66){_0x524d3a=_0x524d3a-0x199;const _0x36e51d=_0x36e5();let _0x201b9b=_0x36e51d[_0x524d3a];return _0x201b9b;}require(_0x2d7461(0x1bb))['config']();const app=express(),PORT=process.env.PORT||0x1f90,supabase=createClient(_0x2d7461(0x1a4),_0x2d7461(0x1a9));app[_0x2d7461(0x1ad)](express[_0x2d7461(0x1ae)]()),app[_0x2d7461(0x1ad)](express[_0x2d7461(0x19d)](path['join'](__dirname))),app['post'](_0x2d7461(0x1af),async(_0x536ecd,_0x38ca95)=>{const _0x36bd3d=_0x2d7461,{username:_0x264b65,password:_0x17995b}=_0x536ecd[_0x36bd3d(0x1a2)],{data:_0x53ef04}=await supabase[_0x36bd3d(0x199)](_0x36bd3d(0x1be))['select']('*')['eq']('username',_0x264b65)[_0x36bd3d(0x1b3)]();if(!_0x53ef04||!await bcrypt[_0x36bd3d(0x19f)](_0x17995b,_0x53ef04[_0x36bd3d(0x1a1)]))return _0x38ca95['status'](0x191)[_0x36bd3d(0x1ae)]({'success':![],'message':_0x36bd3d(0x1a6)});_0x38ca95[_0x36bd3d(0x1ae)]({'success':!![],'username':_0x53ef04[_0x36bd3d(0x1ac)]});}),app['get'](_0x2d7461(0x19b),async(_0xe54cc9,_0x16608a)=>{const _0xbaa9ae=_0x2d7461,{data:_0x398894}=await supabase[_0xbaa9ae(0x199)]('news')[_0xbaa9ae(0x1b4)]('*')[_0xbaa9ae(0x1ba)](_0xbaa9ae(0x1a3),{'ascending':![]});_0x16608a[_0xbaa9ae(0x1ae)](_0x398894||[]);}),app[_0x2d7461(0x1b0)](_0x2d7461(0x1bc),async(_0xcea794,_0x40bfe0)=>{const _0x21222c=_0x2d7461,{data:_0x538b2c}=await supabase[_0x21222c(0x199)]('projects')[_0x21222c(0x1b4)]('*');_0x40bfe0[_0x21222c(0x1ae)](_0x538b2c||[]);}),app[_0x2d7461(0x1b0)](_0x2d7461(0x1aa),async(_0xb64522,_0x42eeec)=>{const _0x578e55=_0x2d7461,{data:_0x127b6b}=await supabase['from'](_0x578e55(0x19c))[_0x578e55(0x1b4)]('*');_0x42eeec['json'](_0x127b6b||[]);}),app[_0x2d7461(0x1b0)]('/*path',(_0x3340da,_0x42160e)=>{const _0x2fd13a=_0x2d7461;_0x42160e[_0x2fd13a(0x1b2)](path[_0x2fd13a(0x1a0)](__dirname,'index.html'));}),app[_0x2d7461(0x1bf)](PORT,async()=>{const _0x3015dc=_0x2d7461;console[_0x3015dc(0x1a5)](_0x3015dc(0x19a)+PORT);});function _0x36e5(){const _0x205f27=['order','dotenv','/api/projects','36370EPEQSU','users','listen','393210KIGhup','from','🚀\x20Server\x20active\x20on\x20port\x20','/api/news','downloads','static','80XUZRfW','compare','join','password','body','created_at','https://rixeqwlkgczmbvhtjndm.supabase.co','log','Invalid\x20credentials','2178416rtrHET','24UQoJSf','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpeGVxd2xrZ2N6bWJ2aHRqbmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1Njc4OTMsImV4cCI6MjA4NjE0Mzg5M30._4GIn38eww1UQpW9JP1gfDQJXB48Fhluwm--oiA4XaE','/api/downloads','@supabase/supabase-js','username','use','json','/api/login','get','path','sendFile','single','select','40396ECQWIC','312720aNtvMj','120906IwFqfg','207IlOVuw','2165765KcPsio'];_0x36e5=function(){return _0x205f27;};return _0x36e5();}
+const express = require('express');
+const path = require('path');
+const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 8080;
+
+// Supabase
+
+const supabase = createClient(
+  "https://rixeqwlkgczmbvhtjndm.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpeGVxd2xrZ2N6bWJ2aHRqbmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1Njc4OTMsImV4cCI6MjA4NjE0Mzg5M30._4GIn38eww1UQpW9JP1gfDQJXB48Fhluwm--oiA4XaE"
+);
+
+// Middleware
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Rate limit login (anti-bruteforce)
+const loginLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// ================= AUTH =================
+app.post('/api/login', loginLimiter, async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ success: false, message: "Missing credentials" });
+  }
+
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('username,password,role')
+    .eq('username', username)
+    .single();
+
+  if (error || !user) {
+    return res.status(401).json({ success: false, message: "Invalid credentials" });
+  }
+
+  const ok = await bcrypt.compare(password, user.password);
+  if (!ok) {
+    return res.status(401).json({ success: false, message: "Invalid credentials" });
+  }
+
+  res.json({
+    success: true,
+    user: {
+      username: user.username,
+      role: user.role
+    }
+  });
+});
+
+// ================= DATA =================
+async function fetchSafe(res, query) {
+  const { data, error } = await query;
+  if (error) {
+    console.error(error);
+    return res.status(500).json([]);
+  }
+  return res.json(data ?? []);
+}
+
+app.get('/api/news', (req, res) =>
+  fetchSafe(res,
+    supabase.from('news').select('*').order('created_at', { ascending: false })
+  )
+);
+
+app.get('/api/projects', (req, res) =>
+  fetchSafe(res,
+    supabase.from('projects').select('*')
+  )
+);
+
+app.get('/api/downloads', (req, res) =>
+  fetchSafe(res,
+    supabase.from('downloads').select('*')
+  )
+);
+
+// ================= SPA FALLBACK =================
+// ⚠️ MUSS ganz am Ende stehen
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'), err => { // 'public' hinzugefügt
+    if (err) {
+      res.status(500).send("index.html wurde nicht im public Ordner gefunden.");
+    }
+  });
+});
+app.listen(PORT, () => {
+  console.log("✅ SERVER STARTED");
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  process.exit(1);
+});

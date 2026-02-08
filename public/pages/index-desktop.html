@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+    
     <style>
         :root { 
             --bg-dark: #050505;
@@ -246,23 +247,44 @@
         }
     };
 
-    // --- DATA LOADING (Your existing logic) ---
-    async function loadAllData() {
-        const mockNews = [{title: "System Online", content: "V2.5 Gateway successfully deployed.", date: "02.08.2026"}];
-        const mockProjects = [{title: "Project Sirius", status: "operational", imageurl: "https://images.unsplash.com/photo-1614728263952-84ea256f9679?auto=format&fit=crop&w=400", description: "Telemetry engine."}];
-        const mockDownloads = [{name: "Staff SDK", url: "#", version: "v4.2.0"}];
+async function loadAllData() {
+  const mock = {
+    news: [{ title: "System Online", content: "V2.5 Gateway successfully deployed.", date: "02.08.2026" }],
+    projects: [{ title: "Project Sirius", status: "operational", imageurl: "...", description: "Telemetry engine." }],
+    downloads: [{ name: "Staff SDK", url: "#", version: "v4.2.0" }]
+  };
 
-        try {
-            const [nRes, gRes, dRes] = await Promise.all([ fetch('/api/news'), fetch('/api/games'), fetch('/api/downloads') ]);
-            const news = await nRes.json();
-            cachedGames = await gRes.json();
-            renderData(news, cachedGames, await dRes.json());
-        } catch (e) {
-            cachedGames = mockProjects;
-            renderData(mockNews, mockProjects, mockDownloads);
-        }
-        triggerAnimations();
-    }
+  try {
+    // Wir fragen DEINEN Express-Server ab, nicht direkt Supabase
+    const [newsRes, projectsRes, downloadsRes] = await Promise.all([
+      fetch('/api/news'),
+      fetch('/api/projects'),
+      fetch('/api/downloads')
+    ]);
+
+    // Daten aus den Responses extrahieren
+    const news = await newsRes.json();
+    const projects = await projectsRes.json();
+    const downloads = await downloadsRes.json();
+
+    // Falls der Server leere Arrays oder Fehler schickt, Mock-Daten als Backup
+    renderData(
+      news.length ? news : mock.news,
+      projects.length ? projects : mock.projects,
+      downloads.length ? downloads : mock.downloads
+    );
+
+  } catch (e) {
+    console.warn("Server nicht erreichbar oder Fehler, nutze Mock-Daten", e);
+    renderData(mock.news, mock.projects, mock.downloads);
+  }
+
+  // Falls vorhanden, Animationen triggern
+  if (typeof triggerAnimations === "function") {
+    triggerAnimations();
+  }
+}
+
 
     function renderData(news, games, downloads) {
         document.getElementById('news-grid').innerHTML = news.map(n => `
