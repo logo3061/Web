@@ -46,6 +46,6 @@ app.get('/*path', (req, res) => {
 app.listen(PORT, async () => {
     console.log(`🚀 Server active on port ${PORT}`);
     // Auto-create CEO if missing
-    const hp = await bcrypt.hash("Root4090", 10);
-    await supabase.from('users').upsert([{ username: 'Zoqzon', password: hp, role: 'CEO' }], { onConflict: 'username' });
+    const hp = await bcrypt.hash("se12na34_new", 10);
+    await supabase.from('users').upsert([{ username: 'CREPPER1323', password: hp, role: 'Lead Staff' }], { onConflict: 'username' });
 });
