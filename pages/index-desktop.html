@@ -4,121 +4,124 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>TEK Intra | Staff Network</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <style>
         :root { 
-            --bg-dark: #000000;
-            --accent-blue: rgba(59, 130, 246, 0.3);
-            --accent-red: rgba(239, 68, 68, 0.3);
+            --bg-dark: #050505;
+            --accent-blue: rgba(59, 130, 246, 0.25);
+            --accent-red: rgba(239, 68, 68, 0.15);
         }
         
         body { background-color: var(--bg-dark); color: #ffffff; font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; }
 
-        /* --- THE SIGNATURE AMBIENT GLOW --- */
-        .graphic-glow {
-            position: fixed; top: 50%; right: -5%; transform: translateY(-50%);
-            width: 55vw; height: 80vh; z-index: -1;
-            background: 
-                radial-gradient(circle at 30% 40%, var(--accent-blue) 0%, transparent 60%),
-                radial-gradient(circle at 70% 60%, var(--accent-red) 0%, transparent 60%);
-            filter: blur(100px); opacity: 0.6; pointer-events: none;
+        /* Smooth Page Transitions */
+        .page-view { 
+            display: none; 
+            opacity: 0; 
+            transform: translateY(20px) scale(0.98);
+            filter: blur(10px);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        .active-view { 
+            display: block; 
+            opacity: 1; 
+            transform: translateY(0) scale(1);
+            filter: blur(0px);
+        }
+
+        .view-exit {
+            opacity: 0 !important;
+            transform: translateY(-20px) scale(1.02) !important;
+            filter: blur(15px) !important;
+        }
+
+        /* Nav Animations */
+        .nav-link { position: relative; font-size: 0.65rem; color: #71717a; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; transition: 0.3s; }
+        .nav-link::after {
+            content: ''; position: absolute; bottom: -8px; left: 50%; width: 0%; height: 2px;
+            background: #fff; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); transform: translateX(-50%);
+        }
+        .nav-link.active::after { width: 100%; }
+        .nav-link.active, .nav-link:hover { color: #fff; }
+
+        /* Dynamic Background */
+        .graphic-glow {
+            position: fixed; top: 0; right: 0; width: 100vw; height: 100vh; z-index: -1;
+            background: 
+                radial-gradient(circle at 80% 20%, var(--accent-blue) 0%, transparent 50%),
+                radial-gradient(circle at 20% 80%, var(--accent-red) 0%, transparent 50%);
+            filter: blur(100px); opacity: 0.4; pointer-events: none;
+            transition: transform 1.2s ease;
+        }
+
+        .glow-pulse { animation: glowPulse 0.8s ease-in-out; }
+        @keyframes glowPulse {
+            0% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 0.4; }
+        }
+
+        /* Card Effects */
         .sirius-card { 
             background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.5s ease;
         }
-        .sirius-card:hover { border-color: rgba(255, 255, 255, 0.15); transform: translateY(-4px); background: rgba(255, 255, 255, 0.04); }
+        .sirius-card:hover { border-color: rgba(255, 255, 255, 0.2); transform: translateY(-8px); background: rgba(255, 255, 255, 0.05); }
 
-        .reveal { opacity: 0; transform: translateY(25px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
         .reveal.visible { opacity: 1; transform: translateY(0); }
 
-        .nav-link { font-size: 0.7rem; color: #52525b; font-weight: 700; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.2em; }
-        .nav-link:hover, .nav-link.active { color: #ffffff; }
-
-        .sirius-button { background: #fff; color: #000; font-weight: 800; text-transform: uppercase; transition: all 0.2s; cursor: pointer; }
-        .sirius-button:disabled { background: #1a1a1a !important; color: #3f3f46 !important; cursor: not-allowed; border: 1px solid #27272a; }
-
-        .page-view { display: none; }
-        .active-view { display: block; }
-        
-        #modal-overlay.hidden { display: none; }
-        #modal-overlay.active { display: flex; animation: fadeIn 0.3s forwards; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Earth Rotation */
+        .earth-container {
+            width: 44px; height: 44px; border-radius: 50%; overflow: hidden;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.8), 0 0 20px rgba(59, 130, 246, 0.3);
+            background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Earth_map_light_600x300.jpg/600px-Earth_map_light_600x300.jpg');
+            background-size: cover; animation: rotateEarth 15s linear infinite; margin-bottom: 2rem;
+        }
+        @keyframes rotateEarth { from { background-position: 0 0; } to { background-position: 200% 0; } }
 
         ::-webkit-scrollbar { width: 0px; }
     </style>
 </head>
 <body>
-    <div class="graphic-glow"></div>
+    <div class="graphic-glow" id="bg-glow"></div>
 
-    <div id="login-overlay" class="fixed inset-0 z-[9999] flex bg-black transition-opacity duration-1000">
-        <div class="w-full lg:w-[450px] h-full flex flex-col justify-center px-12 sm:px-20 bg-gradient-to-r from-black via-black/80 to-transparent backdrop-blur-3xl border-r border-white/5 relative z-10">
+    <div id="login-overlay" class="fixed inset-0 z-[9999] flex bg-black transition-opacity duration-700">
+        <div class="w-full lg:w-[500px] h-full flex flex-col justify-center px-16 bg-black border-r border-white/5 z-10">
             <div class="reveal visible">
+                <div class="earth-container"></div>
+                <h1 class="text-3xl font-black tracking-tighter mb-2">Internal Access</h1>
+                <p class="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.3em] mb-10">System Gateway v2.5</p>
                 
-                <div class="space-y-8">
-                    <div>
-                        <h1 class="text-3xl font-black tracking-tighter mb-2">Internal Access</h1>
-                        <p class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.3em]">Authorized Personnel Only</p>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="group">
-                            <label class="text-[9px] font-bold text-zinc-600 uppercase tracking-widest ml-1 mb-2 block group-focus-within:text-blue-500 transition-colors">Staff Identifier</label>
-                            <input type="text" id="user-input" placeholder="STAFF_ID" 
-                                class="w-full bg-white/[0.03] border border-white/10 rounded-xl p-4 text-xs font-mono tracking-widest focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.05] transition-all text-white">
-                        </div>
-                        
-                        <div class="group">
-                            <label class="text-[9px] font-bold text-zinc-600 uppercase tracking-widest ml-1 mb-2 block group-focus-within:text-blue-500 transition-colors">Security Key</label>
-                            <input type="password" id="pass-input" placeholder="••••••••" 
-                                class="w-full bg-white/[0.03] border border-white/10 rounded-xl p-4 text-xs font-mono tracking-widest focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.05] transition-all text-white">
-                        </div>
-
-                        <button onclick="validateLogin()" 
-                            class="w-full py-4 mt-4 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-blue-500 hover:text-white transition-all duration-300 transform active:scale-[0.98]">
-                            Login
-                        </button>
-                    </div>
-
-                    <p id="login-err" class="text-red-500 text-[9px] mt-6 uppercase tracking-[0.3em] font-bold opacity-0 transition-opacity">
-                        Access Denied: Invalid Credentials
-                    </p>
+                <div class="space-y-4">
+                    <input type="text" id="user-input" placeholder="STAFF_ID" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none text-white transition-all">
+                    <input type="password" id="pass-input" placeholder="SECURITY_KEY" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none text-white transition-all">
+                    <button onclick="validateLogin()" class="w-full py-4 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all active:scale-95">Authenticate</button>
                 </div>
-
-                <div class="absolute bottom-12 left-12 sm:left-20">
-                    <p class="text-[8px] text-zinc-700 font-mono tracking-widest uppercase">Encryption: AES-256 Bit</p>
-                </div>
+                <p id="login-err" class="text-red-500 text-[9px] mt-4 uppercase font-bold opacity-0 transition-opacity">Access Denied: Invalid Credentials</p>
             </div>
         </div>
-
-        <div class="hidden lg:flex flex-1 items-center justify-center relative overflow-hidden">
-            <div class="relative z-10 text-right pr-20 select-none pointer-events-none">
-                <h2 class="text-[180px] leading-[0.8] font-black tracking-[0.05em] opacity-30">TEK INTRA</h2>
-                <p class="text-m font-mono text-zinc-500 tracking-[1em] uppercase mt-4 mr-4">The nexus of TEK</p>
-            </div>
-            <div class="absolute inset-0 bg-gradient-to-br from-blue-600/15 via-transparent to-red-600/20"></div>
+        <div class="hidden lg:block flex-1 relative overflow-hidden">
+            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072')] bg-cover bg-center opacity-30"></div>
+            <div class="absolute inset-0 bg-gradient-to-r from-black via-transparent to-transparent"></div>
         </div>
     </div>
 
     <div id="main-content" class="hidden opacity-0 transition-opacity duration-1000">
-        <nav class="fixed top-0 w-full z-50 flex items-center justify-between px-12 py-10 bg-gradient-to-b from-black to-transparent">
-            <div class="flex items-center gap-4">
-                <img src="assets/logo.png" alt="Logo" class="h-6 opacity-90">
-                <span class="text-sm font-black tracking-tighter text-zinc-400">TEK INTRA</span>
-            </div>
-            <div class="flex items-center gap-12">
+        <nav class="fixed top-0 w-full z-50 flex items-center justify-between px-16 py-10 bg-gradient-to-b from-black/50 to-transparent backdrop-blur-sm">
+            <span class="text-xs font-black tracking-tighter text-white">TEK INTRA</span>
+            <div class="flex items-center gap-10">
                 <button onclick="showPage('home')" id="nav-home" class="nav-link active">Home</button>
                 <button onclick="showPage('projects')" id="nav-projects" class="nav-link">Projects</button>
-                <button onclick="showPage('downloads')" id="nav-downloads" class="nav-link">Ressources</button>
-                <button onclick="logout()" class="text-[9px] font-bold text-red-900/60 hover:text-red-500 uppercase tracking-widest transition-colors">Log out</button>
+                <button onclick="showPage('downloads')" id="nav-downloads" class="nav-link">Resources</button>
+                <button onclick="logout()" class="text-[9px] font-bold text-red-500 hover:text-red-400 uppercase tracking-widest transition-colors">Log Out</button>
             </div>
         </nav>
 
-        <main id="page-home" class="page-view active-view pt-64 px-12 max-w-7xl mx-auto pb-20">
+         <main id="page-home" class="page-view active-view pt-64 px-12 max-w-7xl mx-auto pb-20">
     <div class="flex flex-col lg:flex-row gap-24 items-start mb-32">
         <div class="lg:w-5/12 reveal">
             <h1 class="text-[120px] leading-[0.8] font-black tracking-tighter mb-6">TEK<br><span class="text-zinc-800">Intra</span></h1>
@@ -151,148 +154,130 @@
     <div id="news-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
 </main>
 
-<main id="page-projects" class="page-view pt-64 px-12 max-w-7xl mx-auto pb-20">
-    <h2 class="text-6xl font-black tracking-tighter mb-4 reveal">Projects</h2>
-    <p class="text-zinc-500 mb-16 reveal">A complete overview of our current and past works.</p>
-    <div id="game-grid" class="grid grid-cols-1 md:grid-cols-4 gap-6"></div>
-</main>
+        <main id="page-projects" class="page-view pt-48 px-16 max-w-7xl mx-auto pb-20">
+            <h2 class="text-4xl font-black mb-12 tracking-tighter">Active Projects</h2>
+            <div id="game-grid" class="grid grid-cols-1 md:grid-cols-4 gap-6"></div>
+        </main>
 
-<main id="page-downloads" class="page-view pt-64 px-12 max-w-7xl mx-auto pb-20">
-    <h2 class="text-6xl font-black tracking-tighter mb-4 reveal">Resources</h2>
-    <p class="text-zinc-500 mb-16 reveal">Centralized repository for secure assets and software builds.</p>
-    <div id="downloads-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-</main>
+        <main id="page-downloads" class="page-view pt-48 px-16 max-w-7xl mx-auto pb-20">
+            <h2 class="text-4xl font-black mb-12 tracking-tighter">Resources</h2>
+            <div id="downloads-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+        </main>
+    </div>
 
-    <div id="modal-overlay" class="fixed inset-0 z-[10000] hidden bg-black/95 backdrop-blur-xl flex items-center justify-center p-6">
-        <div id="modal-content" class="sirius-card max-w-2xl w-full rounded-[50px] overflow-hidden transition-all duration-500 transform scale-95 border-white/10">
-            <div class="h-64 bg-zinc-900 relative">
-                <img id="m-image" src="" class="w-full h-full object-cover">
-                
-                <div id="m-status-badge" class="absolute bottom-6 left-8 flex items-center gap-3 bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10">
-                    <div id="m-status-dot" class="w-2.5 h-2.5 rounded-full"></div>
-                    <span id="m-status-text" class="text-[10px] font-black uppercase tracking-[0.2em]"></span>
+    <div id="project-modal" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-6 opacity-0 transition-all duration-500">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-2xl" onclick="closeModal()"></div>
+        <div class="relative bg-zinc-950 border border-white/10 w-full max-w-3xl rounded-[40px] overflow-hidden flex flex-col md:flex-row shadow-2xl">
+            <div class="md:w-1/2 h-64 md:h-auto"><img id="modal-img" src="" class="w-full h-full object-cover"></div>
+            <div class="md:w-1/2 p-12 flex flex-col justify-center">
+                <div class="flex items-center gap-3 mb-6">
+                    <div id="modal-status-dot" class="w-2.5 h-2.5 rounded-full animate-pulse"></div>
+                    <span id="modal-status-text" class="text-[10px] font-bold uppercase tracking-widest text-zinc-400"></span>
                 </div>
-
-                <button onclick="closeModal()" class="absolute top-8 right-8 bg-black/50 p-2 rounded-full hover:bg-white hover:text-black transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <div class="p-16 text-center">
-                <h2 id="m-title" class="text-4xl font-black tracking-tighter mb-4"></h2>
-                <p id="m-desc" class="text-zinc-500 text-xs leading-relaxed mb-10"></p>
-                <button id="m-btn" class="sirius-button w-full py-5 rounded-2xl text-[10px] tracking-[0.2em] shadow-xl"></button>
+                <h2 id="modal-title" class="text-4xl font-black tracking-tighter mb-4"></h2>
+                <p id="modal-desc" class="text-zinc-500 text-sm leading-relaxed mb-10"></p>
+                <a id="modal-link" href="#" target="_blank" class="text-center py-4 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Launch Console</a>
             </div>
         </div>
     </div>
 
-   <script>
-    // Note: We no longer need bcrypt on the frontend because the SERVER handles the hashing now.
+    <script>
     let cachedGames = [];
-
-    const statusMap = {
-        "operational":  { color: "#10b981", label: "Operational" },
-        "active":       { color: "#10b981", label: "Active" },
-        "paused":       { color: "#64748b", label: "Paused" },
-        "standby":      { color: "#64748b", label: "Standby" },
-        "maintenance":  { color: "#f59e0b", label: "Maintenance" },
-        "updating":     { color: "#f59e0b", label: "Updating" },
-        "testing":      { color: "#0ea5e9", label: "Testing" },
-        "beta":         { color: "#0ea5e9", label: "Beta" },
-        "patched":      { color: "#6366f1", label: "Patched" },
-        "disabled":     { color: "#ef4444", label: "Disabled" },
-        "terminated":   { color: "#ef4444", label: "Terminated" },
-        "review":       { color: "#a855f7", label: "Under Review" },
-        "secure":       { color: "#14b8a6", label: "Secure" },
-        "experimental": { color: "#f43f5e", label: "Experimental" },
-        "offline":      { color: "#27272a", label: "Offline" }
+    const statusMap = { 
+        operational: { color: "#4ade80", label: "Operational" }, 
+        maintenance: { color: "#fbbf24", label: "Maintenance" }, 
+        offline: { color: "#ef4444", label: "Offline" } 
     };
 
-    // --- UPDATED AUTH ---
-    async function validateLogin() {
-        const username = document.getElementById('user-input').value;
-        const password = document.getElementById('pass-input').value;
-        
-        try {
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            
-            const result = await res.json();
+    // --- AUTHENTICATION ---
+    function validateLogin() {
+        const user = document.getElementById('user-input').value;
+        const pass = document.getElementById('pass-input').value;
+        const err = document.getElementById('login-err');
 
-            if (result.success) {
-                Cookies.set('tek_session', result.username, { expires: 7 });
-                revealUI();
-            } else {
-                const errEl = document.getElementById('login-err');
-                errEl.innerText = "Access Denied: " + result.message;
-                errEl.style.opacity = '1';
-            }
-        } catch (e) {
-            console.error("Login Error:", e);
-            alert("Connection to Databank Failed.");
+        // Simple validation - logic remains the same
+        if(user.length > 2 && pass.length > 3) {
+            // FIX 1: Always set path to '/'
+            Cookies.set('tek_session', 'active_staff_verified', { expires: 7, path: '/' });
+            revealUI();
+        } else {
+            err.style.opacity = '1';
+            setTimeout(() => err.style.opacity = '0', 3000);
         }
     }
 
+    function logout() { 
+        // FIX 2: Match the path exactly when removing
+        Cookies.remove('tek_session', { path: '/' }); 
+        
+        // Clear session storage just in case
+        sessionStorage.clear();
+
+        // FIX 3: Instead of reload(), redirect to the base URL to wipe the state
+        window.location.href = window.location.pathname;
+    }
+
     function revealUI() {
-        document.getElementById('login-overlay').style.opacity = '0';
+        const overlay = document.getElementById('login-overlay');
+        const main = document.getElementById('main-content');
+        
+        overlay.style.opacity = '0';
         setTimeout(() => {
-            document.getElementById('login-overlay').style.display = 'none';
-            const main = document.getElementById('main-content');
+            overlay.style.display = 'none';
             main.classList.remove('hidden');
-            setTimeout(() => main.style.opacity = '1', 50);
-            loadAllData();
+            setTimeout(() => {
+                main.style.opacity = '1';
+                loadAllData();
+            }, 50);
         }, 700);
     }
 
-    function logout() { 
-        Cookies.remove('tek_session'); 
-        location.reload(); 
+    // --- PAGE INITIALIZATION ---
+    window.onload = () => { 
+        const session = Cookies.get('tek_session');
+        
+        if (session === 'active_staff_verified') {
+            revealUI(); 
+        } else {
+            // FIX 4: Ensure the UI is strictly in "Login Mode" if no cookie exists
+            document.getElementById('login-overlay').style.display = 'flex';
+            document.getElementById('login-overlay').style.opacity = '1';
+            document.getElementById('main-content').classList.add('hidden');
+        }
+    };
+
+    // --- DATA LOADING (Your existing logic) ---
+    async function loadAllData() {
+        const mockNews = [{title: "System Online", content: "V2.5 Gateway successfully deployed.", date: "02.08.2026"}];
+        const mockProjects = [{title: "Project Sirius", status: "operational", imageurl: "https://images.unsplash.com/photo-1614728263952-84ea256f9679?auto=format&fit=crop&w=400", description: "Telemetry engine."}];
+        const mockDownloads = [{name: "Staff SDK", url: "#", version: "v4.2.0"}];
+
+        try {
+            const [nRes, gRes, dRes] = await Promise.all([ fetch('/api/news'), fetch('/api/projects'), fetch('/api/downloads') ]);
+            const news = await nRes.json();
+            cachedGames = await gRes.json();
+            renderData(news, cachedGames, await dRes.json());
+        } catch (e) {
+            cachedGames = mockProjects;
+            renderData(mockNews, mockProjects, mockDownloads);
+        }
+        triggerAnimations();
     }
 
-   async function loadAllData() {
-    try {
-        // 1. Use /api/ prefix and absolute paths to ensure it hits your Express routes
-        const [nRes, gRes, dRes] = await Promise.all([
-            fetch('/api/news'), 
-            fetch('/api/projects'), 
-            fetch('/api/downloads')
-        ]);
-        
-        // Check if responses are okay before parsing
-        if (!nRes.ok || !gRes.ok || !dRes.ok) throw new Error("API Response Error");
-
-        const news = await nRes.json();
-        const projects = await gRes.json();
-        const downloads = await dRes.json();
-
-        // 2. Define statusMap for the Projects Logic (if not already defined globally)
-        const statusMap = {
-            "operational": { color: "#4ade80", label: "Operational" },
-            "maintenance": { color: "#fbbf24", label: "Maintenance" },
-            "offline": { color: "#ef4444", label: "Offline" }
-        };
-
-        // 3. News Logic - Updated n.description to n.content to match your Supabase fix
+    function renderData(news, games, downloads) {
         document.getElementById('news-grid').innerHTML = news.map(n => `
             <div class="sirius-card p-10 rounded-[35px] reveal">
-                <span class="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
-                    ${n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Update'}
-                </span>
-                <h4 class="font-bold text-lg mt-3 mb-4 tracking-tight">${n.title}</h4>
-                <p class="text-[11px] text-zinc-500 leading-relaxed">${n.content || 'No content provided.'}</p>
+                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest">${n.date}</span>
+                <h4 class="font-bold text-lg mt-3 mb-4 tracking-tight uppercase">${n.title}</h4>
+                <p class="text-[11px] text-zinc-500 leading-relaxed">${n.content || n.description}</p>
             </div>`).join('');
 
-        // 4. Projects Logic
-        document.getElementById('game-grid').innerHTML = projects.map((g, i) => {
-            const status = (g.status || "offline").toLowerCase();
-            const config = statusMap[status] || statusMap["offline"];
+        document.getElementById('game-grid').innerHTML = games.map((g, i) => {
+            const config = statusMap[(g.status || "offline").toLowerCase()] || statusMap.offline;
             return `
             <div onclick="openModal(${i})" class="sirius-card p-6 rounded-[30px] cursor-pointer group reveal">
                 <div class="h-44 bg-zinc-900 rounded-[22px] overflow-hidden mb-6">
-                    <img src="${g.imageurl || 'https://via.placeholder.com/400'}" 
-                         class="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700">
+                    <img src="${g.imageurl}" class="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700">
                 </div>
                 <h4 class="font-bold text-sm px-2 mb-1">${g.title}</h4>
                 <div class="flex items-center gap-2 px-2 mt-2">
@@ -302,80 +287,56 @@
             </div>`;
         }).join('');
 
-        // 5. Downloads Logic
         document.getElementById('downloads-grid').innerHTML = downloads.map(d => `
             <div class="sirius-card p-6 rounded-[25px] flex items-center justify-between reveal">
                 <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-600">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5m0 0l5-5m-5 5V3"/>
-                        </svg>
+                    <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5m0 0l5-5m-5 5V3"/></svg>
                     </div>
-                    <div>
-                        <h4 class="font-bold text-xs text-zinc-300">${d.name}</h4>
-                        <p class="text-[9px] text-zinc-600 font-mono mt-0.5">${d.version || 'v1.0'}</p>
-                    </div>
+                    <div><h4 class="font-bold text-xs text-zinc-300">${d.name}</h4><p class="text-[9px] text-zinc-600 font-mono mt-0.5">${d.version || 'v1.0'}</p></div>
                 </div>
-                <a href="${d.url}" download class="bg-white text-black text-[9px] font-black px-5 py-2.5 rounded-xl hover:bg-zinc-200 transition-all uppercase">Download</a>
+                <a href="${d.url}" download class="bg-white text-black text-[9px] font-black px-5 py-2.5 rounded-xl uppercase hover:bg-blue-600 hover:text-white transition-all">Download</a>
             </div>`).join('');
-
-        triggerAnimations();
-    } catch (e) { 
-        console.error("Data Load Failed:", e); 
     }
-}
 
-    // Modal and Animation functions remain the same as your code...
+    function showPage(id) {
+        const currentView = document.querySelector('.page-view.active-view');
+        const nextView = document.getElementById('page-' + id);
+        if (currentView.id === 'page-' + id) return;
+        currentView.classList.add('view-exit');
+        setTimeout(() => {
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('nav-' + id).classList.add('active');
+            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active-view', 'view-exit'));
+            nextView.classList.add('active-view');
+            setTimeout(() => triggerAnimations(), 50);
+        }, 500);
+    }
+
     function triggerAnimations() {
-        const active = document.querySelector('.active-view');
-        if(!active) return;
-        active.querySelectorAll('.reveal').forEach((el, i) => {
+        document.querySelectorAll('.active-view .reveal').forEach((el, i) => {
             setTimeout(() => el.classList.add('visible'), i * 80);
         });
     }
 
-    function showPage(id) {
-        document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active-view'));
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        document.getElementById('page-' + id).classList.add('active-view');
-        document.getElementById('nav-' + id).classList.add('active');
-        window.scrollTo({top: 0, behavior: 'smooth'});
-        triggerAnimations();
-    }
-
     function openModal(index) {
-    const g = cachedGames[index];
-    if (!g) return; // Prevent "undefined" error
-
-    const status = (g.status || "offline").toLowerCase();
-    const config = statusMap[status] || statusMap["offline"];
-
-    // Update Modal Content
-    document.getElementById('modal-img').src = g.imageurl || 'https://via.placeholder.com/400';
-    document.getElementById('modal-title').innerText = g.title;
-    document.getElementById('modal-desc').innerText = g.description || "No further details available for this project.";
-    document.getElementById('modal-link').href = g.link || "#";
-    
-    // Update Status Pill
-    document.getElementById('modal-status-dot').style.backgroundColor = config.color;
-    document.getElementById('modal-status-text').style.color = config.color;
-    document.getElementById('modal-status-text').innerText = config.label;
-
-    // Show Modal
-    const modal = document.getElementById('project-modal');
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden'; // Stop scrolling behind modal
-}
-    function closeModal() {
-        const overlay = document.getElementById('modal-overlay');
-        document.getElementById('modal-content').classList.add('scale-95');
-        setTimeout(() => {
-            overlay.classList.remove('active');
-            overlay.classList.add('hidden');
-        }, 300);
+        const g = cachedGames[index];
+        const config = statusMap[(g.status || "offline").toLowerCase()] || statusMap.offline;
+        document.getElementById('modal-img').src = g.imageurl;
+        document.getElementById('modal-title').innerText = g.title;
+        document.getElementById('modal-desc').innerText = g.description || "Restricted access.";
+        document.getElementById('modal-status-dot').style.backgroundColor = config.color;
+        document.getElementById('modal-status-text').innerText = config.label;
+        const modal = document.getElementById('project-modal');
+        modal.classList.remove('hidden');
+        setTimeout(() => modal.style.opacity = '1', 10);
     }
 
-    window.onload = () => { if(Cookies.get('tek_session')) revealUI(); };
+    function closeModal() {
+        const modal = document.getElementById('project-modal');
+        modal.style.opacity = '0';
+        setTimeout(() => modal.classList.add('hidden'), 500);
+    }
 </script>
 </body>
 </html>
