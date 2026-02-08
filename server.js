@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
