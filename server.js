@@ -102,6 +102,6 @@ const indexPath = path.join(__dirname, 'index.html');
 
 // --- 5. Start Server ---
 app.listen(PORT, () => {
-    console.log(`\n🚀 Server is running at: http://127.0.0.1:${PORT}`);
+    console.log(`\n🚀 Server is running at: https://tek-studios.onrender.com`);
     console.log(`📂 Database located at: ${DB_FILE}\n`);
 });
