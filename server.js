@@ -63,7 +63,24 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     }
   });
 });
+// Füge das in deine server.js ein:
 
+app.get('/api/services', async (req, res) => {
+  try {
+    // Holt alle Zeilen aus der Tabelle 'services'
+    const { data, error } = await supabase
+      .from('services')
+      .select('*');
+
+    if (error) throw error;
+
+    // Sendet die Daten als JSON an dein Frontend
+    res.json(data);
+  } catch (error) {
+    console.error('Error fetching services:', error);
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+});
 // ================= DATA =================
 async function fetchSafe(res, query) {
   const { data, error } = await query;

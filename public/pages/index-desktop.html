@@ -248,41 +248,65 @@
     };
 
 async function loadAllData() {
-  const mock = {
-    news: [{ title: "System Online", content: "V2.5 Gateway successfully deployed.", date: "02.08.2026" }],
-    projects: [{ title: "Project Sirius", status: "operational", imageurl: "...", description: "Telemetry engine." }],
-    downloads: [{ name: "Staff SDK", url: "#", version: "v4.2.0" }]
-  };
+    try {
+        console.log("1. Starting Pre-flight check...");
 
-  try {
-    // Wir fragen DEINEN Express-Server ab, nicht direkt Supabase
-    const [newsRes, projectsRes, downloadsRes] = await Promise.all([
-      fetch('/api/news'),
-      fetch('/api/projects'),
-      fetch('/api/downloads')
-    ]);
+        // Prüfen, ob der Server überhaupt antwortet
+        const statusRes = await fetch('/api/services');
+        
+        console.log("2. Status API Response Code:", statusRes.status);
 
-    // Daten aus den Responses extrahieren
-    const news = await newsRes.json();
-    const projects = await projectsRes.json();
-    const downloads = await downloadsRes.json();
+        if (!statusRes.ok) {
+            // Wenn hier 404 steht, fehlt der Code aus Schritt 1 im Backend!
+            throw new Error(`Service API failed with status: ${statusRes.status}`);
+        }
 
-    // Falls der Server leere Arrays oder Fehler schickt, Mock-Daten als Backup
-    renderData(
-      news.length ? news : mock.news,
-      projects.length ? projects : mock.projects,
-      downloads.length ? downloads : mock.downloads
-    );
+        const data = await statusRes.json();
+        console.log("3. Data received from DB:", data);
 
-  } catch (e) {
-    console.warn("Server nicht erreichbar oder Fehler, nutze Mock-Daten", e);
-    renderData(mock.news, mock.projects, mock.downloads);
-  }
+        // Array-Check (Supabase gibt immer ein Array zurück)
+        if (Array.isArray(data)) {
+            const maintenance = data.find(item => item.service === 'maintenance');
+            
+            // WICHTIG: Wir prüfen auf den String "true"
+            if (maintenance && maintenance.state === "true") {
+                console.warn("!! MAINTENANCE MODE DETECTED !! Redirecting...");
+                window.location.href = "errors/maint/index.html";
+                return; // Stoppt alles weitere
+            }
+        }
 
-  // Falls vorhanden, Animationen triggern
-  if (typeof triggerAnimations === "function") {
-    triggerAnimations();
-  }
+        console.log("4. System operational. Loading content...");
+
+        // --- AB HIER NORMALER LADEPROZESS ---
+        
+        const [newsRes, projectsRes, downloadsRes] = await Promise.all([
+            fetch('/api/news'),
+            fetch('/api/projects'),
+            fetch('/api/downloads')
+        ]);
+
+        // Wenn einer dieser Aufrufe fehlschlägt, ist die DB wirklich kaputt
+        if (!newsRes.ok || !projectsRes.ok || !downloadsRes.ok) {
+            throw new Error("One or more content streams failed.");
+        }
+
+        const news = await newsRes.json();
+        const projects = await projectsRes.json();
+        const downloads = await downloadsRes.json();
+
+        cachedGames = projects;
+        renderData(news, projects, downloads);
+
+    } catch (e) {
+        // Hier landet er, wenn Schritt 1 fehlt oder die DB offline ist
+        console.error("CRITICAL ERROR (Triggering 500 Page):", e);
+        window.location.href = "errors/oos/index.html"; 
+    }
+
+    if (typeof triggerAnimations === "function") {
+        triggerAnimations();
+    }
 }
 
 
