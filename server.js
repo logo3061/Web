@@ -116,7 +116,7 @@ app.get('/api/downloads', (req, res) =>
 // ================= SPA FALLBACK =================
 // ⚠️ MUSS ganz am Ende stehen
 app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'), err => { // 'public' hinzugefügt
+  res.sendFile(path.join(public, 'index.html'), err => { // 'public' hinzugefügt
     if (err) {
       res.status(500).send("index.html wurde nicht im public Ordner gefunden.");
     }
