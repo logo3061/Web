@@ -1,6 +1,5 @@
 const express = require('express');
 const path = require('path');
-const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
@@ -8,62 +7,67 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Supabase
+// ================= HELPERS =================
+// Converts "Pass123" to "80,97,115,115,49,50,51"
+const toAsciiString = (str) => {
+    return str.split('').map(char => char.charCodeAt(0)).join(',');
+};
+// ================= CONFIG & SUPABASE =================
+const supabaseUrl = "https://rixeqwlkgczmbvhtjndm.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpeGVxd2xrZ2N6bWJ2aHRqbmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1Njc4OTMsImV4cCI6MjA4NjE0Mzg5M30._4GIn38eww1UQpW9JP1gfDQJXB48Fhluwm--oiA4XaE";
 
-const supabase = createClient(
-  "https://rixeqwlkgczmbvhtjndm.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpeGVxd2xrZ2N6bWJ2aHRqbmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1Njc4OTMsImV4cCI6MjA4NjE0Mzg5M30._4GIn38eww1UQpW9JP1gfDQJXB48Fhluwm--oiA4XaE"
-);
-// Teste die Verbindung beim Start
-supabase.from('news').select('count', { count: 'exact', head: true })
-  .then(({ count, error }) => {
-    if (error) console.error("❌ Supabase Verbindungsfehler:", error.message);
-    else console.log("✅ Supabase erfolgreich verbunden. Einträge in News:", count);
-  });
-// Middleware
+const supabase = createClient(supabaseUrl, supabaseKey);
+// ================= MIDDLEWARE =================
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Rate limit login (anti-bruteforce)
 const loginLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false
+    windowMs: 60 * 1000,
+    max: 100, // Reduced from 175k for actual security
+    message: { success: false, message: "Zu viele Versuche. Bitte in einer Minute erneut probieren." }
 });
 
-// ================= AUTH =================
+// ================= AUTH API =================
 app.post('/api/login', loginLimiter, async (req, res) => {
-  const { username, password } = req.body;
+    const username = req.body.username ? req.body.username.trim() : '';
+    const plainPassword = req.body.password ? req.body.password.trim() : '';
 
-  if (!username || !password) {
-    return res.status(400).json({ success: false, message: "Missing credentials" });
-  }
-
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('username,password,role')
-    .eq('username', username)
-    .single();
-
-  if (error || !user) {
-    return res.status(401).json({ success: false, message: "Invalid credentials" });
-  }
-
-  const ok = await bcrypt.compare(password, user.password);
-  if (!ok) {
-    return res.status(401).json({ success: false, message: "Invalid credentials" });
-  }
-
-  res.json({
-    success: true,
-    user: {
-      username: user.username,
-      role: user.role
+    if (!username || !plainPassword) {
+        return res.status(400).json({ success: false, message: "Benutzername und Passwort erforderlich." });
     }
-  });
+
+    try {
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('username, password, role')
+            .ilike('username', username)
+            .single();
+
+        if (error || !user) {
+            return res.status(401).json({ success: false, message: "Ungültige Anmeldedaten." });
+        }
+
+        // Convert the incoming password to ASCII format to compare with the DB
+        const inputAscii = toAsciiString(plainPassword);
+
+        // ================= ASCII CHECK =================
+        if (inputAscii !== user.password) {
+            console.log(`Log: Falsches Passwort für ${user.username}`);
+            return res.status(401).json({ success: false, message: "Ungültige Anmeldedaten." });
+        }
+
+        console.log(`✅ Login erfolgreich: ${user.username}`);
+        res.json({
+            success: true,
+            user: { username: user.username, role: user.role }
+        });
+
+    } catch (err) {
+        console.error("Internal Auth Error:", err);
+        res.status(500).json({ success: false, message: "Serverfehler bei der Authentifizierung." });
+    }
 });
-// Füge das in deine server.js ein:
+
 
 app.get('/api/services', async (req, res) => {
   try {

@@ -8,381 +8,272 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <style>
-        :root { 
-            --bg-dark: #050505;
-            --accent-blue: rgba(59, 130, 246, 0.25);
-            --accent-red: rgba(239, 68, 68, 0.15);
-        }
+        :root { --bg-dark: #000000; --accent: #3b82f6; }
         
-        body { background-color: var(--bg-dark); color: #ffffff; font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh; }
-
-        /* Smooth Page Transitions */
-        .page-view { 
-            display: none; 
-            opacity: 0; 
-            transform: translateY(20px) scale(0.98);
-            filter: blur(10px);
-            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        body {
+            background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.65)), 
+                        url('https://cdn.discordapp.com/attachments/1051507841447501886/1472916682501521534/image-14.png?ex=6994500e&is=6992fe8e&hm=b47c8ac2a46baa5e6f331a8e876a7d25e0da8e2417760e441876bcc4b595bbe5&');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: #ffffff; font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh;
         }
 
-        .active-view { 
-            display: block; 
-            opacity: 1; 
-            transform: translateY(0) scale(1);
-            filter: blur(0px);
+        .page-view {
+            position: absolute; width: 100%; top: 0; left: 0;
+            display: none; opacity: 0; transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
         }
+        .active-view { display: block; opacity: 1; transform: translateY(0); z-index: 5; }
+        .view-exit { opacity: 0 !important; transform: translateY(-10px); pointer-events: none; }
 
-        .view-exit {
-            opacity: 0 !important;
-            transform: translateY(-20px) scale(1.02) !important;
-            filter: blur(15px) !important;
+        .reveal {
+            opacity: 0; transform: translateY(20px);
+            transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1), transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         }
-
-        /* Nav Animations */
-        .nav-link { position: relative; font-size: 0.65rem; color: #71717a; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; transition: 0.3s; }
-        .nav-link::after {
-            content: ''; position: absolute; bottom: -8px; left: 50%; width: 0%; height: 2px;
-            background: #fff; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); transform: translateX(-50%);
-        }
-        .nav-link.active::after { width: 100%; }
-        .nav-link.active, .nav-link:hover { color: #fff; }
-
-        /* Dynamic Background */
-        .graphic-glow {
-            position: fixed; top: 0; right: 0; width: 100vw; height: 100vh; z-index: -1;
-            background: 
-                radial-gradient(circle at 80% 20%, var(--accent-blue) 0%, transparent 50%),
-                radial-gradient(circle at 20% 80%, var(--accent-red) 0%, transparent 50%);
-            filter: blur(100px); opacity: 0.4; pointer-events: none;
-            transition: transform 1.2s ease;
-        }
-
-        .glow-pulse { animation: glowPulse 0.8s ease-in-out; }
-        @keyframes glowPulse {
-            0% { transform: scale(1); opacity: 0.4; }
-            50% { transform: scale(1.1); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 0.4; }
-        }
-
-        /* Card Effects */
-        .sirius-card { 
-            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.5s ease;
-        }
-        .sirius-card:hover { border-color: rgba(255, 255, 255, 0.2); transform: translateY(-8px); background: rgba(255, 255, 255, 0.05); }
-
-        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
         .reveal.visible { opacity: 1; transform: translateY(0); }
 
-        /* Earth Rotation */
+        .nav-link { position: relative; font-size: 0.65rem; color: #71717a; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; transition: 0.3s; }
+        .nav-link.active, .nav-link:hover { color: #fff; }
+        .nav-link::after {
+            content: ''; position: absolute; bottom: -8px; left: 50%; width: 0%; height: 2px;
+            background: #3b82f6; transition: 0.4s; transform: translateX(-50%);
+        }
+        .nav-link.active::after { width: 100%; }
+
+        .sirius-card { 
+            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sirius-card:hover { border-color: rgba(59, 130, 246, 0.4); background: rgba(255, 255, 255, 0.04); transform: translateY(-4px); }
+
         .earth-container {
             width: 44px; height: 44px; border-radius: 50%; overflow: hidden;
             box-shadow: inset -5px -5px 15px rgba(0,0,0,0.8), 0 0 20px rgba(59, 130, 246, 0.3);
             background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Earth_map_light_600x300.jpg/600px-Earth_map_light_600x300.jpg');
-            background-size: cover; animation: rotateEarth 15s linear infinite; margin-bottom: 2rem;
+            background-size: cover; animation: rotateEarth 20s linear infinite; margin-bottom: 2rem;
         }
         @keyframes rotateEarth { from { background-position: 0 0; } to { background-position: 200% 0; } }
-
         ::-webkit-scrollbar { width: 0px; }
     </style>
 </head>
 <body>
-    <div class="graphic-glow" id="bg-glow"></div>
 
     <div id="login-overlay" class="fixed inset-0 z-[9999] flex bg-black transition-opacity duration-700">
         <div class="w-full lg:w-[500px] h-full flex flex-col justify-center px-16 bg-black border-r border-white/5 z-10">
             <div class="reveal visible">
                 <div class="earth-container"></div>
-                <h1 class="text-3xl font-black tracking-tighter mb-2">Internal Access</h1>
-                <p class="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.3em] mb-10">System Gateway v2.5</p>
-                
+                <h1 class="text-3xl font-black tracking-tighter mb-2 uppercase">Tek Intra</h1>
+                <p class="text-zinc-500 text-[10px] mb-8 tracking-widest uppercase">Staff Hub</p>
                 <div class="space-y-4">
                     <input type="text" id="user-input" placeholder="STAFF_ID" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none text-white transition-all">
                     <input type="password" id="pass-input" placeholder="SECURITY_KEY" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none text-white transition-all">
-                    <button onclick="validateLogin()" class="w-full py-4 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all active:scale-95">Authenticate</button>
+                    <button id="auth-btn" onclick="validateLogin()" class="w-full py-4 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all active:scale-95">Authenticate</button>
                 </div>
-                <p id="login-err" class="text-red-500 text-[9px] mt-4 uppercase font-bold opacity-0 transition-opacity">Access Denied: Invalid Credentials</p>
+                <p id="login-err" class="text-red-500 text-[9px] mt-4 uppercase font-bold opacity-0 transition-opacity">Access Denied</p>
             </div>
         </div>
-        <div class="hidden lg:block flex-1 relative overflow-hidden">
-            <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072')] bg-cover bg-center opacity-30"></div>
-            <div class="absolute inset-0 bg-gradient-to-r from-black via-transparent to-transparent"></div>
+        <div class="hidden lg:block flex-1 relative opacity-30">
+            <div class="absolute inset-0 bg-[url('https://cdn.discordapp.com/attachments/1051507841447501886/1472916682501521534/image-14.png?ex=6994500e&is=6992fe8e&hm=b47c8ac2a46baa5e6f331a8e876a7d25e0da8e2417760e441876bcc4b595bbe5&')] bg-cover bg-center"></div>
         </div>
     </div>
 
     <div id="main-content" class="hidden opacity-0 transition-opacity duration-1000">
-        <nav class="fixed top-0 w-full z-50 flex items-center justify-between px-16 py-10 bg-gradient-to-b from-black/50 to-transparent backdrop-blur-sm">
-            <span class="text-xs font-black tracking-tighter text-white">TEK INTRA</span>
-            <div class="flex items-center gap-10">
+        <nav class="fixed top-5 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-[100] flex items-center justify-between px-8 py-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
+            <span class="text-xs font-black tracking-tighter text-white flex items-center gap-2">
+                <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div> TEK INTRA
+            </span>
+            <div class="flex items-center gap-8">
                 <button onclick="showPage('home')" id="nav-home" class="nav-link active">Home</button>
-                <button onclick="showPage('projects')" id="nav-projects" class="nav-link">Projects</button>
-                <button onclick="showPage('downloads')" id="nav-downloads" class="nav-link">Resources</button>
-                <button onclick="logout()" class="text-[9px] font-bold text-red-500 hover:text-red-400 uppercase tracking-widest transition-colors">Log Out</button>
+                <button onclick="showPage('projects')" id="nav-projects" class="nav-link">Games</button>
+                <button onclick="showPage('downloads')" id="nav-downloads" class="nav-link">Assets</button>
+                <button onclick="logout()" class="text-[9px] font-bold text-red-500 hover:text-red-400 uppercase tracking-widest transition-colors ml-2">Exit</button>
             </div>
         </nav>
 
-         <main id="page-home" class="page-view active-view pt-64 px-12 max-w-7xl mx-auto pb-20">
-    <div class="flex flex-col lg:flex-row gap-24 items-start mb-32">
-        <div class="lg:w-5/12 reveal">
-            <h1 class="text-[120px] leading-[0.8] font-black tracking-tighter mb-6">TEK<br><span class="text-zinc-800">Intra</span></h1>
-            <p class="text-xl text-zinc-500 mb-10 font-light">The ultimate all-in-one staff nexus.</p>
-        </div>
-        <div class="lg:w-7/12">
-            <p class="text-[10px] font-bold mb-10 tracking-[0.3em] text-zinc-600 uppercase">About TEK INTRA</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div class="sirius-card p-8 rounded-[35px] reveal">
-                    <h4 class="font-bold text-sm mb-3">All-in-one</h4>
-                    <p class="text-[11px] text-zinc-500">TEK INTRA centralizes everything you need in one place.</p>
+        <main id="page-home" class="page-view active-view pt-32 px-6 lg:px-16 max-w-7xl mx-auto pb-32">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                <div class="lg:col-span-7">
+                    <div class="mb-12 reveal">
+                        <h3 id="welcome-user" class="text-blue-500 text-xs font-black uppercase tracking-[0.4em] mb-4">Welcome back, Agent</h3>
+                        <h1 class="text-6xl lg:text-8xl font-black tracking-tighter text-white mb-6 leading-none">TEK Studios <br><span class="text-zinc-600">INTRA</span></h1>
+                        <p class="text-zinc-400 text-lg max-w-md leading-relaxed border-l-2 border-blue-500 pl-6">The next generation hub of TEK Studios.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12">
+                        <div class="sirius-card p-6 rounded-2xl reveal">
+                            <p class="text-[9px] text-zinc-500 uppercase font-bold mb-1">Network Latency</p>
+                            <p id="stat-latency" class="text-xl font-black text-blue-500">--ms</p>
+                        </div>
+                        <div class="sirius-card p-6 rounded-2xl reveal">
+                            <p class="text-[9px] text-zinc-500 uppercase font-bold mb-1">Active Projects</p>
+                            <p id="stat-projects" class="text-xl font-black text-white">0</p>
+                        </div>
+<div class="sirius-card p-6 rounded-2xl reveal">
+    <p class="text-[9px] text-zinc-500 uppercase font-bold mb-1">Authenticated User</p>
+    <p id="stat-user-identity" class="text-xl font-black text-green-500 uppercase tracking-tighter">Guest</p>
+</div>
+                    </div>
                 </div>
-                <div class="sirius-card p-8 rounded-[35px] reveal">
-                    <h4 class="font-bold text-sm mb-3">Downloads</h4>
-                    <p class="text-[11px] text-zinc-500">Access all essential development assets for TEK Studios.</p>
-                </div>
-                <div class="sirius-card p-8 rounded-[35px] reveal">
-                    <h4 class="font-bold text-sm mb-3">Overview</h4>
-                    <p class="text-[11px] text-zinc-500">Get a comprehensive high-level view of TEK Studios' operations.</p>
-                </div>
-                <div class="sirius-card p-8 rounded-[35px] reveal">
-                    <h4 class="font-bold text-sm mb-3">Precision Design</h4>
-                    <p class="text-[11px] text-zinc-500">Tailored specifically to optimize the TEK Studios development workflow.</p>
+
+                <div class="lg:col-span-5">
+                    <h2 class="text-xs font-black uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-4">
+                        <span class="w-12 h-[1px] bg-zinc-800"></span> Recent news
+                    </h2>
+                    <div id="news-grid" class="space-y-4"></div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <h3 class="text-[10px] font-bold mb-10 tracking-[0.3em] text-zinc-600 uppercase reveal">Latest news</h3>
-    <div id="news-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-</main>
+        </main>
 
         <main id="page-projects" class="page-view pt-48 px-16 max-w-7xl mx-auto pb-20">
-            <h2 class="text-4xl font-black mb-12 tracking-tighter">Active Projects</h2>
+            <h2 class="text-5xl font-black mb-12 tracking-tighter reveal">INTRA <span class="text-blue-500">| GAMES</span></h2>
             <div id="game-grid" class="grid grid-cols-1 md:grid-cols-4 gap-6"></div>
         </main>
 
         <main id="page-downloads" class="page-view pt-48 px-16 max-w-7xl mx-auto pb-20">
-            <h2 class="text-4xl font-black mb-12 tracking-tighter">Resources</h2>
+            <h2 class="text-5xl font-black mb-12 tracking-tighter reveal">INTRA <span class="text-blue-500">| ASSETS</span></h2>
             <div id="downloads-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
         </main>
     </div>
 
-    <div id="project-modal" class="fixed inset-0 z-[10000] hidden flex items-center justify-center p-6 opacity-0 transition-all duration-500">
-        <div class="absolute inset-0 bg-black/90 backdrop-blur-2xl" onclick="closeModal()"></div>
-        <div class="relative bg-zinc-950 border border-white/10 w-full max-w-3xl rounded-[40px] overflow-hidden flex flex-col md:flex-row shadow-2xl">
-            <div class="md:w-1/2 h-64 md:h-auto"><img id="modal-img" src="" class="w-full h-full object-cover"></div>
-            <div class="md:w-1/2 p-12 flex flex-col justify-center">
-                <div class="flex items-center gap-3 mb-6">
-                    <div id="modal-status-dot" class="w-2.5 h-2.5 rounded-full animate-pulse"></div>
-                    <span id="modal-status-text" class="text-[10px] font-bold uppercase tracking-widest text-zinc-400"></span>
-                </div>
-                <h2 id="modal-title" class="text-4xl font-black tracking-tighter mb-4"></h2>
-                <p id="modal-desc" class="text-zinc-500 text-sm leading-relaxed mb-10"></p>
-                <a id="modal-link" href="#" target="_blank" class="text-center py-4 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">Launch Console</a>
-            </div>
-        </div>
-    </div>
-
     <script>
-    const PORT = 8080
-    let cachedGames = [];
-    const statusMap = { 
-        operational: { color: "#4ade80", label: "Operational" }, 
-        maintenance: { color: "#fbbf24", label: "Maintenance" }, 
-        offline: { color: "#ef4444", label: "Offline" } 
-    };
+        const statusMap = { operational: { color: "#4ade80", label: "Online" }, maintenance: { color: "#fbbf24", label: "Maint" }, offline: { color: "#ef4444", label: "Offline" } };
 
-    // --- AUTHENTICATION ---
-    function validateLogin() {
-        const user = document.getElementById('user-input').value;
-        const pass = document.getElementById('pass-input').value;
-        const err = document.getElementById('login-err');
+        async function validateLogin() {
+            const username = document.getElementById('user-input').value.trim();
+            const password = document.getElementById('pass-input').value.trim();
+            const btn = document.getElementById('auth-btn');
+            if (!username || !password) return showError("Input Required");
+            btn.innerText = "VERIFYING..."; btn.disabled = true;
+            try {
+                const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('tek_user', data.user.username);
+                    Cookies.set('tek_session', 'verified', { expires: 1 });
+                    revealUI();
+                } else showError(data.message || "Invalid Credentials");
+            } catch (e) { showError("Server Error"); } finally { btn.innerText = "Authenticate"; btn.disabled = false; }
+        }
 
-        // Simple validation - logic remains the same
-        if(user.length > 2 && pass.length > 3) {
-            // FIX 1: Always set path to '/'
-            Cookies.set('tek_session', 'active_staff_verified', { expires: 7, path: '/' });
-            revealUI();
-        } else {
-            err.style.opacity = '1';
+        function showError(msg) {
+            const err = document.getElementById('login-err');
+            err.innerText = msg.toUpperCase(); err.style.opacity = '1';
             setTimeout(() => err.style.opacity = '0', 3000);
         }
-    }
 
-    function logout() { 
-        // FIX 2: Match the path exactly when removing
-        Cookies.remove('tek_session', { path: '/' }); 
-        
-        // Clear session storage just in case
-        sessionStorage.clear();
-
-        // FIX 3: Instead of reload(), redirect to the base URL to wipe the state
-        window.location.href = window.location.pathname;
-    }
-
-    function revealUI() {
-        const overlay = document.getElementById('login-overlay');
-        const main = document.getElementById('main-content');
-        
-        overlay.style.opacity = '0';
-        setTimeout(() => {
-            overlay.style.display = 'none';
-            main.classList.remove('hidden');
-            setTimeout(() => {
-                main.style.opacity = '1';
-                loadAllData();
-            }, 50);
-        }, 700);
-    }
-
-    // --- PAGE INITIALIZATION ---
-    window.onload = () => { 
-        const session = Cookies.get('tek_session');
-        
-        if (session === 'active_staff_verified') {
-            revealUI(); 
-        } else {
-            // FIX 4: Ensure the UI is strictly in "Login Mode" if no cookie exists
-            document.getElementById('login-overlay').style.display = 'flex';
-            document.getElementById('login-overlay').style.opacity = '1';
-            document.getElementById('main-content').classList.add('hidden');
-        }
-    };
-
-async function loadAllData() {
-    try {
-        console.log("1. Starting Pre-flight check...");
-
-        // Prüfen, ob der Server überhaupt antwortet
-        const statusRes = await fetch('/api/services');
-        
-        console.log("2. Status API Response Code:", statusRes.status);
-
-        if (!statusRes.ok) {
-            // Wenn hier 404 steht, fehlt der Code aus Schritt 1 im Backend!
-            throw new Error(`Service API failed with status: ${statusRes.status}`);
-        }
-
-        const data = await statusRes.json();
-        console.log("3. Data received from DB:", data);
-
-        // Array-Check (Supabase gibt immer ein Array zurück)
-        if (Array.isArray(data)) {
-            const maintenance = data.find(item => item.service === 'maintenance');
-            
-            // WICHTIG: Wir prüfen auf den String "true"
-            if (maintenance && maintenance.state === "true") {
-                console.warn("!! MAINTENANCE MODE DETECTED !! Redirecting...");
-                window.location.href = "errors/maint/index.html";
-                return; // Stoppt alles weitere
-            }
-        }
-
-        console.log("4. System operational. Loading content...");
-
-        // --- AB HIER NORMALER LADEPROZESS ---
-        
-        const [newsRes, projectsRes, downloadsRes] = await Promise.all([
-            fetch('/api/news'),
-            fetch('/api/projects'),
-            fetch('/api/downloads')
-        ]);
-
-        // Wenn einer dieser Aufrufe fehlschlägt, ist die DB wirklich kaputt
-        if (!newsRes.ok || !projectsRes.ok || !downloadsRes.ok) {
-            throw new Error("One or more content streams failed.");
-        }
-
-        const news = await newsRes.json();
-        const projects = await projectsRes.json();
-        const downloads = await downloadsRes.json();
-
-        cachedGames = projects;
-        renderData(news, projects, downloads);
-
-    } catch (e) {
-        // Hier landet er, wenn Schritt 1 fehlt oder die DB offline ist
-        console.error("CRITICAL ERROR (Triggering 500 Page):", e);
-        window.location.href = "errors/oos/index.html"; 
-    }
-
-    if (typeof triggerAnimations === "function") {
-        triggerAnimations();
-    }
+function revealUI() {
+    const overlay = document.getElementById('login-overlay');
+    const main = document.getElementById('main-content');
+    
+    // Get the username from storage
+    const activeUser = localStorage.getItem('tek_user') || 'Staff';
+    
+    // Update the Hero Welcome text
+    document.getElementById('welcome-user').innerText = `Welcome back, ${activeUser}`;
+    
+    // Update the Stats Card text
+    document.getElementById('stat-user-identity').innerText = activeUser;
+    
+    overlay.classList.add('view-exit');
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        main.classList.remove('hidden');
+        setTimeout(() => { 
+            main.style.opacity = '1'; 
+            loadData(); 
+            startPinger(); 
+        }, 50);
+    }, 600);
 }
+        function logout() { Cookies.remove('tek_session'); localStorage.clear(); window.location.reload(); }
 
+        // --- DYNAMIC STATS LOGIC ---
+        function startPinger() {
+            setInterval(async () => {
+                const start = Date.now();
+                try {
+                    await fetch('/api/news', { method: 'HEAD' });
+                    const duration = Date.now() - start;
+                    document.getElementById('stat-latency').innerText = `${duration}ms`;
+                } catch (e) {
+                    document.getElementById('stat-latency').innerText = `ERR`;
+                }
+            }, 5000);
+        }
 
-    function renderData(news, games, downloads) {
-        document.getElementById('news-grid').innerHTML = news.map(n => `
-            <div class="sirius-card p-10 rounded-[35px] reveal">
-                <span class="text-[9px] font-mono text-zinc-600 uppercase tracking-widest">${n.date}</span>
-                <h4 class="font-bold text-lg mt-3 mb-4 tracking-tight uppercase">${n.title}</h4>
-                <p class="text-[11px] text-zinc-500 leading-relaxed">${n.content || n.description}</p>
-            </div>`).join('');
+        async function loadData() {
+            try {
+                const [news, projs, dls] = await Promise.all([
+                    fetch('/api/news').then(r => r.json()).catch(() => []),
+                    fetch('/api/projects').then(r => r.json()).catch(() => []),
+                    fetch('/api/downloads').then(r => r.json()).catch(() => [])
+                ]);
 
-        document.getElementById('game-grid').innerHTML = games.map((g, i) => {
-            const config = statusMap[(g.status || "offline").toLowerCase()] || statusMap.offline;
-            return `
-            <div onclick="openModal(${i})" class="sirius-card p-6 rounded-[30px] cursor-pointer group reveal">
-                <div class="h-44 bg-zinc-900 rounded-[22px] overflow-hidden mb-6">
-                    <img src="${g.imageurl}" class="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700">
-                </div>
-                <h4 class="font-bold text-sm px-2 mb-1">${g.title}</h4>
-                <div class="flex items-center gap-2 px-2 mt-2">
-                    <div class="w-1.5 h-1.5 rounded-full" style="background-color: ${config.color}"></div>
-                    <span class="text-[9px] font-bold uppercase tracking-widest" style="color: ${config.color}">${config.label}</span>
-                </div>
-            </div>`;
-        }).join('');
+                // Update Stats
+                document.getElementById('stat-projects').innerText = projs.length;
 
-        document.getElementById('downloads-grid').innerHTML = downloads.map(d => `
-            <div class="sirius-card p-6 rounded-[25px] flex items-center justify-between reveal">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5m0 0l5-5m-5 5V3"/></svg>
+                render(news, projs, dls);
+                triggerAnims();
+            } catch (e) { triggerAnims(); }
+        }
+
+        function render(news, games, dls) {
+            document.getElementById('news-grid').innerHTML = news.map(n => `
+                <div class="sirius-card p-6 rounded-2xl reveal">
+                    <span class="text-[8px] font-black text-blue-500 uppercase tracking-[0.2em] mb-2 block">${new Date(n.created_at).toLocaleDateString()}</span>
+                    <h4 class="font-bold text-sm mb-2 uppercase">${n.title}</h4>
+                    <p class="text-[10px] text-zinc-500 leading-relaxed">${n.content || ''}</p>
+                </div>`).join('');
+
+            document.getElementById('game-grid').innerHTML = games.map(g => {
+                const s = statusMap[g.status?.toLowerCase()] || statusMap.offline;
+                return `
+                <div class="sirius-card p-5 rounded-[25px] reveal group">
+                    <div class="h-32 bg-zinc-900 rounded-xl overflow-hidden mb-4 relative">
+                        <img src="${g.imageurl}" class="w-full h-full object-cover opacity-40 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110">
                     </div>
-                    <div><h4 class="font-bold text-xs text-zinc-300">${d.name}</h4><p class="text-[9px] text-zinc-600 font-mono mt-0.5">${d.version || 'v1.0'}</p></div>
-                </div>
-                <a href="${d.url}" download class="bg-white text-black text-[9px] font-black px-5 py-2.5 rounded-xl uppercase hover:bg-blue-600 hover:text-white transition-all">Download</a>
-            </div>`).join('');
-    }
+                    <h4 class="font-bold text-[11px] mb-2 uppercase tracking-tighter">${g.title}</h4>
+                    <div class="flex items-center gap-2">
+                        <div class="w-1 h-1 rounded-full animate-pulse" style="background-color:${s.color}"></div>
+                        <span class="text-[8px] font-black uppercase" style="color:${s.color}">${s.label}</span>
+                    </div>
+                </div>`;
+            }).join('');
 
-    function showPage(id) {
-        const currentView = document.querySelector('.page-view.active-view');
-        const nextView = document.getElementById('page-' + id);
-        if (currentView.id === 'page-' + id) return;
-        currentView.classList.add('view-exit');
-        setTimeout(() => {
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('nav-' + id).classList.add('active');
-            document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active-view', 'view-exit'));
-            nextView.classList.add('active-view');
-            setTimeout(() => triggerAnimations(), 50);
-        }, 500);
-    }
+            document.getElementById('downloads-grid').innerHTML = dls.map(d => `
+                <div class="sirius-card p-6 rounded-2xl flex items-center justify-between reveal">
+                    <div>
+                        <h4 class="font-bold text-[10px] text-zinc-300 uppercase">${d.name}</h4>
+                        <p class="text-[8px] text-zinc-600 font-mono">${d.version || 'STABLE'}</p>
+                    </div>
+                    <a href="${d.url}" class="bg-white text-black text-[8px] font-black px-4 py-2 rounded-lg uppercase hover:bg-blue-600 hover:text-white transition-all">Download</a>
+                </div>`).join('');
+        }
 
-    function triggerAnimations() {
-        document.querySelectorAll('.active-view .reveal').forEach((el, i) => {
-            setTimeout(() => el.classList.add('visible'), i * 80);
-        });
-    }
+        function showPage(id) {
+            const current = document.querySelector('.page-view.active-view');
+            const target = document.getElementById('page-' + id);
+            if (!current || current.id === target.id) return;
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.toggle('active', n.id === 'nav-' + id));
+            target.querySelectorAll('.reveal').forEach(el => el.classList.remove('visible'));
+            current.classList.add('view-exit');
+            setTimeout(() => {
+                current.classList.remove('active-view', 'view-exit');
+                target.classList.add('active-view');
+                setTimeout(triggerAnims, 50);
+            }, 400);
+        }
 
-    function openModal(index) {
-        const g = cachedGames[index];
-        const config = statusMap[(g.status || "offline").toLowerCase()] || statusMap.offline;
-        document.getElementById('modal-img').src = g.imageurl;
-        document.getElementById('modal-title').innerText = g.title;
-        document.getElementById('modal-desc').innerText = g.description || "Restricted access.";
-        document.getElementById('modal-status-dot').style.backgroundColor = config.color;
-        document.getElementById('modal-status-text').innerText = config.label;
-        const modal = document.getElementById('project-modal');
-        modal.classList.remove('hidden');
-        setTimeout(() => modal.style.opacity = '1', 10);
-    }
+        function triggerAnims() {
+            const activePage = document.querySelector('.page-view.active-view');
+            if (!activePage) return;
+            const elements = activePage.querySelectorAll('.reveal');
+            elements.forEach((el, i) => {
+                setTimeout(() => { el.classList.add('visible'); }, i * 75); 
+            });
+        }
 
-    function closeModal() {
-        const modal = document.getElementById('project-modal');
-        modal.style.opacity = '0';
-        setTimeout(() => modal.classList.add('hidden'), 500);
-    }
-</script>
+        window.onload = () => { if (Cookies.get('tek_session')) revealUI(); };
+        document.addEventListener('keypress', e => { if(e.key === 'Enter') validateLogin(); });
+    </script>
 </body>
 </html>

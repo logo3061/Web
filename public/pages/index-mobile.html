@@ -8,268 +8,271 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <style>
-        :root { 
-            --bg-dark: #050505;
-            --accent-blue: rgba(59, 130, 246, 0.25);
-            --accent-red: rgba(239, 68, 68, 0.15);
-        }
+        :root { --bg-dark: #000000; --accent: #3b82f6; }
         
-        body { background-color: var(--bg-dark); color: #ffffff; font-family: 'Inter', sans-serif; overflow: hidden; min-height: 100vh; }
-
-        .page-view { 
-            display: none; opacity: 0; transform: translateY(20px); filter: blur(10px);
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .active-view { display: block; opacity: 1; transform: translateY(0); filter: blur(0px); }
-
-        /* Dynamic Background */
-        .graphic-glow {
-            position: fixed; top: 0; right: 0; width: 100vw; height: 100vh; z-index: -1;
-            background: radial-gradient(circle at 80% 20%, var(--accent-blue) 0%, transparent 50%),
-                        radial-gradient(circle at 20% 80%, var(--accent-red) 0%, transparent 50%);
-            filter: blur(80px); opacity: 0.4; pointer-events: none;
+        body {
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), 
+                        url('https://cdn.discordapp.com/attachments/1051507841447501886/1472916682501521534/image-14.png?ex=6994500e&is=6992fe8e&hm=b47c8ac2a46baa5e6f331a8e876a7d25e0da8e2417760e441876bcc4b595bbe5&');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: #ffffff; font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh;
         }
 
-        /* Earth Rotation */
+        .page-view {
+            position: absolute; width: 100%; top: 0; left: 0;
+            display: none; opacity: 0; transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        .active-view { display: block; opacity: 1; transform: translateY(0); z-index: 5; }
+        .view-exit { opacity: 0 !important; transform: translateY(-10px); pointer-events: none; }
+
+        .reveal {
+            opacity: 0; transform: translateY(20px);
+            transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1), transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+
+        .nav-link { position: relative; font-size: 0.6rem; color: #71717a; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; transition: 0.3s; }
+        .nav-link.active, .nav-link:hover { color: #fff; }
+        .nav-link::after {
+            content: ''; position: absolute; bottom: -8px; left: 50%; width: 0%; height: 2px;
+            background: #3b82f6; transition: 0.4s; transform: translateX(-50%);
+        }
+        .nav-link.active::after { width: 100%; }
+
+        .sirius-card { 
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255, 255, 255, 0.08); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sirius-card:active { transform: scale(0.98); background: rgba(255, 255, 255, 0.06); }
+
         .earth-container {
             width: 44px; height: 44px; border-radius: 50%; overflow: hidden;
             box-shadow: inset -5px -5px 15px rgba(0,0,0,0.8), 0 0 20px rgba(59, 130, 246, 0.3);
             background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Earth_map_light_600x300.jpg/600px-Earth_map_light_600x300.jpg');
-            background-size: cover; animation: rotateEarth 15s linear infinite;
+            background-size: cover; animation: rotateEarth 20s linear infinite; margin-bottom: 1.5rem;
         }
         @keyframes rotateEarth { from { background-position: 0 0; } to { background-position: 200% 0; } }
-
-        .sirius-card { 
-            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255, 255, 255, 0.05); transition: 0.4s;
-        }
-        .reveal { opacity: 0; transform: translateY(20px); transition: 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-        .reveal.visible { opacity: 1; transform: translateY(0); }
-
-        .mobile-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.6rem; color: #52525b; font-weight: 800; text-transform: uppercase; }
-        .mobile-nav-item.active { color: #fff; }
-
-        /* Status Overlay Styles */
-        .status-screen {
-            position: fixed; inset: 0; z-index: 10000; background: #000;
-            display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; px: 10;
+        ::-webkit-scrollbar { width: 0px; }
+        
+        /* Mobile Specific Overrides */
+        @media (max-width: 768px) {
+            .nav-link { font-size: 0.55rem; letter-spacing: 0.05em; }
+            .hero-title { font-size: 3.5rem !important; line-height: 0.9; }
         }
     </style>
 </head>
 <body>
-    <div class="graphic-glow"></div>
 
-    <div id="maintenance-screen" class="status-screen">
-        <div class="w-16 h-16 border-2 border-yellow-500/20 rounded-full flex items-center justify-center mb-6">
-            <div class="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
-        </div>
-        <h1 class="text-3xl font-black tracking-tighter mb-2 uppercase">Scheduled<br>Maintenance</h1>
-        <p class="text-xs text-zinc-500 max-w-[250px] leading-relaxed uppercase tracking-widest">System maintenance in progress.</p>
-    </div>
-
-    <div id="oos-screen" class="status-screen">
-        <div class="w-16 h-16 border-2 border-red-500/20 rounded-full flex items-center justify-center mb-6">
-            <div class="w-8 h-[2px] bg-red-500 rotate-45 absolute"></div>
-            <div class="w-8 h-[2px] bg-red-500 -rotate-45 absolute"></div>
-        </div>
-        <h1 class="text-3xl font-black tracking-tighter mb-2 uppercase text-red-500">Service Offline</h1>
-        <p class="text-xs text-zinc-500 max-w-[250px] leading-relaxed uppercase tracking-widest">Connection to TEK Mainframe lost. Critical Error 500.</p>
-        <button onclick="location.reload()" class="mt-10 px-8 py-3 border border-white/10 rounded-full text-[10px] font-bold uppercase tracking-widest">Retry Connection</button>
-    </div>
-
-    <div id="login-overlay" class="fixed inset-0 z-[9999] flex flex-col bg-black transition-opacity duration-700">
-        <div class="flex-1 flex flex-col justify-center px-10">
+    <div id="login-overlay" class="fixed inset-0 z-[9999] flex bg-black transition-opacity duration-700">
+        <div class="w-full lg:w-[500px] h-full flex flex-col justify-center px-8 sm:px-16 bg-black border-r border-white/5 z-10">
             <div class="reveal visible">
-                <div class="earth-container mb-8"></div>
-                <h1 class="text-3xl font-black tracking-tighter mb-2">Internal Access</h1>
-                <p class="text-[10px] text-zinc-600 font-bold uppercase tracking-[0.3em] mb-10">Gateway v2.5</p>
-                <div class="space-y-4">
-                    <input type="text" id="user-input" placeholder="STAFF_ID" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs outline-none text-white focus:border-blue-500">
-                    <input type="password" id="pass-input" placeholder="SECURITY_KEY" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs outline-none text-white focus:border-blue-500">
-                    <button onclick="validateLogin()" class="w-full py-4 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all">Authenticate</button>
+                <div class="earth-container"></div>
+                <h1 class="text-3xl font-black tracking-tighter mb-1 uppercase">Tek Intra</h1>
+                <p class="text-zinc-500 text-[9px] mb-8 tracking-widest uppercase">Mobile Access Node</p>
+                <div class="space-y-3">
+                    <input type="text" id="user-input" placeholder="STAFF_ID" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none text-white transition-all">
+                    <input type="password" id="pass-input" placeholder="SECURITY_KEY" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs focus:border-blue-500 outline-none text-white transition-all">
+                    <button id="auth-btn" onclick="validateLogin()" class="w-full py-4 bg-white text-black rounded-xl text-[10px] font-black uppercase tracking-widest active:bg-blue-600 active:text-white transition-all active:scale-95">Authenticate</button>
                 </div>
-                <p id="login-err" class="text-red-500 text-[9px] mt-4 uppercase font-bold text-center opacity-0 transition-opacity">Access Denied</p>
+                <p id="login-err" class="text-red-500 text-[9px] mt-4 uppercase font-bold opacity-0 transition-opacity text-center">Access Denied</p>
             </div>
+        </div>
+        <div class="hidden lg:block flex-1 relative opacity-30">
+            <div class="absolute inset-0 bg-[url('https://cdn.discordapp.com/attachments/1051507841447501886/1472916682501521534/image-14.png?ex=6994500e&is=6992fe8e&hm=b47c8ac2a46baa5e6f331a8e876a7d25e0da8e2417760e441876bcc4b595bbe5&')] bg-cover bg-center"></div>
         </div>
     </div>
 
     <div id="main-content" class="hidden opacity-0 transition-opacity duration-1000">
-        <nav class="fixed top-0 w-full z-40 flex items-center justify-between px-8 py-6 bg-black/60 backdrop-blur-md border-b border-white/5">
-            <div class="flex flex-col">
-                <span class="text-[10px] font-black tracking-tighter uppercase">TEK Intra</span>
-                <div class="flex items-center gap-1.5">
-                    <div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                    <span class="text-[7px] font-bold text-zinc-500 uppercase tracking-widest">Mainframe Active</span>
-                </div>
+        <nav class="fixed top-4 left-1/2 -translate-x-1/2 w-[94%] max-w-5xl z-[100] flex items-center justify-between px-4 sm:px-8 py-3 bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl sm:rounded-full">
+            <span class="text-[10px] font-black tracking-tighter text-white flex items-center gap-2">
+                <div class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div> TEK
+            </span>
+            <div class="flex items-center gap-4 sm:gap-8">
+                <button onclick="showPage('home')" id="nav-home" class="nav-link active">Home</button>
+                <button onclick="showPage('projects')" id="nav-projects" class="nav-link">Games</button>
+                <button onclick="showPage('downloads')" id="nav-downloads" class="nav-link">Assets</button>
+                <button onclick="logout()" class="text-[9px] font-bold text-red-500 uppercase tracking-widest ml-1">Exit</button>
             </div>
-            <button onclick="logout()" class="text-[8px] font-bold text-red-500 uppercase tracking-widest border border-red-500/20 px-3 py-1.5 rounded-lg">Log Out</button>
         </nav>
 
-        <main id="page-home" class="page-view active-view pt-32 px-8 pb-32 overflow-y-auto h-screen">
-            <div class="reveal mb-12">
-                <h1 class="text-[70px] leading-[0.8] font-black tracking-tighter mb-4">TEK<br><span class="text-zinc-800">Intra</span></h1>
-                <div class="grid grid-cols-2 gap-3 mt-10">
-                    <div class="sirius-card p-4 rounded-2xl">
-                        <h4 class="text-[9px] font-bold text-zinc-500 uppercase mb-1">Status</h4>
-                        <p class="text-[11px] font-bold">STAFF_VERIFIED</p>
+        <main id="page-home" class="page-view active-view pt-28 sm:pt-32 px-6 lg:px-16 max-w-7xl mx-auto pb-20">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+                <div class="lg:col-span-7">
+                    <div class="mb-8 sm:mb-12 reveal">
+                        <h3 id="welcome-user" class="text-blue-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">Welcome back, Agent</h3>
+                        <h1 class="hero-title text-5xl lg:text-8xl font-black tracking-tighter text-white mb-6 leading-tight">TEK Studios <br><span class="text-zinc-600">INTRA</span></h1>
+                        <p class="text-zinc-400 text-sm sm:text-lg max-w-md leading-relaxed border-l-2 border-blue-500 pl-4 sm:pl-6">Next generation hub for TEK personnel.</p>
                     </div>
-                    <div class="sirius-card p-4 rounded-2xl">
-                        <h4 class="text-[9px] font-bold text-zinc-500 uppercase mb-1">Region</h4>
-                        <p class="text-[11px] font-bold">EU_WEST_1</p>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-12">
+                        <div class="sirius-card p-4 sm:p-6 rounded-2xl reveal">
+                            <p class="text-[8px] text-zinc-500 uppercase font-bold mb-1">Latency</p>
+                            <p id="stat-latency" class="text-lg sm:text-xl font-black text-blue-500">--ms</p>
+                        </div>
+                        <div class="sirius-card p-4 sm:p-6 rounded-2xl reveal">
+                            <p class="text-[8px] text-zinc-500 uppercase font-bold mb-1">Projects</p>
+                            <p id="stat-projects" class="text-lg sm:text-xl font-black text-white">0</p>
+                        </div>
+                        <div class="sirius-card p-4 sm:p-6 rounded-2xl reveal col-span-2 md:col-span-1">
+                            <p class="text-[8px] text-zinc-500 uppercase font-bold mb-1">User ID</p>
+                            <p id="stat-user-identity" class="text-lg sm:text-xl font-black text-green-500 uppercase truncate">Guest</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="space-y-4 mb-12">
-                <p class="text-[9px] font-bold tracking-[0.3em] text-zinc-600 uppercase">System Modules</p>
-                <div class="sirius-card p-6 rounded-[24px] reveal">
-                    <h4 class="font-bold text-xs mb-2">Centralized Assets</h4>
-                    <p class="text-[10px] text-zinc-500 leading-relaxed">Direct access to the TEK Studios development pipeline and resource library.</p>
+                <div class="lg:col-span-5">
+                    <h2 class="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-4">
+                        <span class="w-8 h-[1px] bg-zinc-800"></span> Updates
+                    </h2>
+                    <div id="news-grid" class="space-y-4"></div>
                 </div>
             </div>
-            
-            <h3 class="text-[9px] font-bold mb-6 tracking-[0.3em] text-zinc-600 uppercase reveal">Intelligence</h3>
-            <div id="news-grid" class="space-y-4"></div>
         </main>
 
-        <main id="page-projects" class="page-view pt-32 px-8 pb-32 h-screen overflow-y-auto">
-            <h2 class="text-3xl font-black mb-8 tracking-tighter uppercase italic">Projects</h2>
-            <div id="game-grid" class="space-y-6"></div>
+        <main id="page-projects" class="page-view pt-28 px-6 lg:px-16 max-w-7xl mx-auto pb-20">
+            <h2 class="text-3xl sm:text-5xl font-black mb-8 tracking-tighter reveal">INTRA <span class="text-blue-500">| GAMES</span></h2>
+            <div id="game-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"></div>
         </main>
 
-        <main id="page-downloads" class="page-view pt-32 px-8 pb-32 h-screen overflow-y-auto">
-            <h2 class="text-3xl font-black mb-8 tracking-tighter uppercase italic">Resources</h2>
-            <div id="downloads-grid" class="space-y-3"></div>
+        <main id="page-downloads" class="page-view pt-28 px-6 lg:px-16 max-w-7xl mx-auto pb-20">
+            <h2 class="text-3xl sm:text-5xl font-black mb-8 tracking-tighter reveal">INTRA <span class="text-blue-500">| ASSETS</span></h2>
+            <div id="downloads-grid" class="grid grid-cols-1 md:grid-cols-3 gap-3"></div>
         </main>
-
-        <nav class="fixed bottom-0 w-full z-50 px-8 pb-8 pt-4 bg-black/80 backdrop-blur-2xl border-t border-white/10 flex justify-around items-center">
-            <button onclick="showPage('home')" id="nav-home" class="mobile-nav-item active">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>
-                Home
-            </button>
-            <button onclick="showPage('projects')" id="nav-projects" class="mobile-nav-item">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>
-                Projects
-            </button>
-            <button onclick="showPage('downloads')" id="nav-downloads" class="mobile-nav-item">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M7 10l5 5m0 0l5-5"/></svg>
-                Files
-            </button>
-        </nav>
     </div>
 
     <script>
-    let cachedGames = [];
-    const statusMap = { 
-        operational: { color: "#4ade80", label: "Online" }, 
-        maintenance: { color: "#fbbf24", label: "Maint" }, 
-        offline: { color: "#ef4444", label: "Offline" } 
-    };
+        const statusMap = { operational: { color: "#4ade80", label: "Online" }, maintenance: { color: "#fbbf24", label: "Maint" }, offline: { color: "#ef4444", label: "Offline" } };
 
-    async function loadAllData() {
-        try {
-            // Pre-flight: Check Maintenance
-            const statusRes = await fetch('/api/services');
-            if (!statusRes.ok) throw new Error("OOS");
-
-            const serviceData = await statusRes.json();
-            const maintenance = serviceData.find(s => s.service === 'maintenance');
-            if (maintenance && maintenance.state === "true") {
-                document.getElementById('maintenance-screen').style.display = 'flex';
-                return;
-            }
-
-            // Normal Load
-            const [newsRes, projectsRes, downloadsRes] = await Promise.all([
-                fetch('/api/news'), fetch('/api/projects'), fetch('/api/downloads')
-            ]);
-
-            const news = await newsRes.json();
-            const projects = await projectsRes.json();
-            const downloads = await downloadsRes.json();
-
-            cachedGames = projects;
-            renderData(news, projects, downloads);
-            triggerAnimations();
-
-        } catch (e) {
-            console.error("Critical Failure", e);
-            document.getElementById('oos-screen').style.display = 'flex';
+        async function validateLogin() {
+            const username = document.getElementById('user-input').value.trim();
+            const password = document.getElementById('pass-input').value.trim();
+            const btn = document.getElementById('auth-btn');
+            if (!username || !password) return showError("Input Required");
+            btn.innerText = "VERIFYING..."; btn.disabled = true;
+            try {
+                const res = await fetch('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('tek_user', data.user.username);
+                    Cookies.set('tek_session', 'verified', { expires: 1 });
+                    revealUI();
+                } else showError(data.message || "Invalid Credentials");
+            } catch (e) { showError("Server Error"); } finally { btn.innerText = "Authenticate"; btn.disabled = false; }
         }
-    }
 
-    function renderData(news, games, downloads) {
-        document.getElementById('news-grid').innerHTML = news.map(n => `
-            <div class="sirius-card p-6 rounded-[24px] reveal">
-                <p class="text-[8px] font-mono text-zinc-600 uppercase mb-2">${n.date}</p>
-                <h4 class="font-bold text-sm mb-2 uppercase">${n.title}</h4>
-                <p class="text-[10px] text-zinc-500 leading-relaxed">${n.content || n.description}</p>
-            </div>`).join('');
+        function showError(msg) {
+            const err = document.getElementById('login-err');
+            err.innerText = msg.toUpperCase(); err.style.opacity = '1';
+            setTimeout(() => err.style.opacity = '0', 3000);
+        }
 
-        document.getElementById('game-grid').innerHTML = games.map((g, i) => {
-            const config = statusMap[(g.status || "offline").toLowerCase()] || statusMap.offline;
-            return `
-            <div class="sirius-card p-4 rounded-[24px] reveal">
-                <div class="h-40 bg-zinc-900 rounded-xl overflow-hidden mb-4">
-                    <img src="${g.imageurl}" class="w-full h-full object-cover opacity-50">
-                </div>
-                <div class="flex justify-between items-center">
-                    <h4 class="font-bold text-xs uppercase">${g.title}</h4>
-                    <span class="text-[8px] font-bold px-2 py-1 rounded bg-white/5" style="color: ${config.color}">${config.label}</span>
-                </div>
-            </div>`;
-        }).join('');
+        function revealUI() {
+            const overlay = document.getElementById('login-overlay');
+            const main = document.getElementById('main-content');
+            const activeUser = localStorage.getItem('tek_user') || 'Staff';
+            
+            document.getElementById('welcome-user').innerText = `Welcome back, ${activeUser}`;
+            document.getElementById('stat-user-identity').innerText = activeUser;
+            
+            overlay.classList.add('view-exit');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                main.classList.remove('hidden');
+                setTimeout(() => { 
+                    main.style.opacity = '1'; 
+                    loadData(); 
+                    startPinger(); 
+                }, 50);
+            }, 600);
+        }
 
-        document.getElementById('downloads-grid').innerHTML = downloads.map(d => `
-            <div class="sirius-card p-4 rounded-2xl flex items-center justify-between reveal">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1"/></svg>
+        function logout() { Cookies.remove('tek_session'); localStorage.clear(); window.location.reload(); }
+
+        function startPinger() {
+            setInterval(async () => {
+                const start = Date.now();
+                try {
+                    await fetch('/api/news', { method: 'HEAD' });
+                    const duration = Date.now() - start;
+                    document.getElementById('stat-latency').innerText = `${duration}ms`;
+                } catch (e) {
+                    document.getElementById('stat-latency').innerText = `ERR`;
+                }
+            }, 5000);
+        }
+
+        async function loadData() {
+            try {
+                const [news, projs, dls] = await Promise.all([
+                    fetch('/api/news').then(r => r.json()).catch(() => []),
+                    fetch('/api/projects').then(r => r.json()).catch(() => []),
+                    fetch('/api/downloads').then(r => r.json()).catch(() => [])
+                ]);
+                document.getElementById('stat-projects').innerText = projs.length;
+                render(news, projs, dls);
+                triggerAnims();
+            } catch (e) { triggerAnims(); }
+        }
+
+        function render(news, games, dls) {
+            document.getElementById('news-grid').innerHTML = news.map(n => `
+                <div class="sirius-card p-5 rounded-2xl reveal">
+                    <span class="text-[7px] font-black text-blue-500 uppercase tracking-[0.2em] mb-2 block">${new Date(n.created_at).toLocaleDateString()}</span>
+                    <h4 class="font-bold text-xs mb-2 uppercase">${n.title}</h4>
+                    <p class="text-[10px] text-zinc-500 leading-relaxed">${n.content || ''}</p>
+                </div>`).join('');
+
+            document.getElementById('game-grid').innerHTML = games.map(g => {
+                const s = statusMap[g.status?.toLowerCase()] || statusMap.offline;
+                return `
+                <div class="sirius-card p-4 rounded-[20px] reveal group">
+                    <div class="h-28 bg-zinc-900 rounded-xl overflow-hidden mb-3 relative">
+                        <img src="${g.imageurl}" class="w-full h-full object-cover opacity-60">
                     </div>
-                    <div><h4 class="font-bold text-[10px] uppercase text-zinc-200">${d.name}</h4><p class="text-[8px] text-zinc-600 font-mono">${d.version || 'v1.0'}</p></div>
-                </div>
-                <a href="${d.url}" download class="bg-white text-black text-[9px] font-black px-4 py-2 rounded-lg uppercase">Get</a>
-            </div>`).join('');
-    }
+                    <h4 class="font-bold text-[10px] mb-2 uppercase tracking-tight">${g.title}</h4>
+                    <div class="flex items-center gap-2">
+                        <div class="w-1 h-1 rounded-full" style="background-color:${s.color}"></div>
+                        <span class="text-[7px] font-black uppercase" style="color:${s.color}">${s.label}</span>
+                    </div>
+                </div>`;
+            }).join('');
 
-    function showPage(id) {
-        document.querySelectorAll('.mobile-nav-item').forEach(l => l.classList.remove('active'));
-        document.getElementById('nav-' + id).classList.add('active');
-        document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active-view'));
-        document.getElementById('page-' + id).classList.add('active-view');
-        window.scrollTo(0,0);
-        triggerAnimations();
-    }
-
-    function triggerAnimations() {
-        document.querySelectorAll('.active-view .reveal').forEach((el, i) => {
-            setTimeout(() => el.classList.add('visible'), i * 80);
-        });
-    }
-
-    function validateLogin() {
-        const u = document.getElementById('user-input').value;
-        const p = document.getElementById('pass-input').value;
-        if(u.length > 2 && p.length > 3) {
-            Cookies.set('tek_session', 'active_staff_verified', { expires: 7, path: '/' });
-            revealUI();
-        } else {
-            document.getElementById('login-err').style.opacity = '1';
+            document.getElementById('downloads-grid').innerHTML = dls.map(d => `
+                <div class="sirius-card p-5 rounded-xl flex items-center justify-between reveal">
+                    <div>
+                        <h4 class="font-bold text-[9px] text-zinc-300 uppercase">${d.name}</h4>
+                        <p class="text-[7px] text-zinc-600 font-mono">${d.version || 'STABLE'}</p>
+                    </div>
+                    <a href="${d.url}" class="bg-white text-black text-[8px] font-black px-3 py-2 rounded-lg uppercase active:bg-blue-600 active:text-white transition-all">Get</a>
+                </div>`).join('');
         }
-    }
 
-    function revealUI() {
-        document.getElementById('login-overlay').style.opacity = '0';
-        setTimeout(() => {
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('main-content').classList.remove('hidden');
-            setTimeout(() => { document.getElementById('main-content').style.opacity = '1'; loadAllData(); }, 50);
-        }, 700);
-    }
+        function showPage(id) {
+            const current = document.querySelector('.page-view.active-view');
+            const target = document.getElementById('page-' + id);
+            if (!current || current.id === target.id) return;
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.toggle('active', n.id === 'nav-' + id));
+            target.querySelectorAll('.reveal').forEach(el => el.classList.remove('visible'));
+            current.classList.add('view-exit');
+            setTimeout(() => {
+                current.classList.remove('active-view', 'view-exit');
+                target.classList.add('active-view');
+                window.scrollTo(0,0);
+                setTimeout(triggerAnims, 50);
+            }, 400);
+        }
 
-    function logout() { Cookies.remove('tek_session', { path: '/' }); location.reload(); }
+        function triggerAnims() {
+            const activePage = document.querySelector('.page-view.active-view');
+            if (!activePage) return;
+            const elements = activePage.querySelectorAll('.reveal');
+            elements.forEach((el, i) => {
+                setTimeout(() => { el.classList.add('visible'); }, i * 60); 
+            });
+        }
 
-    window.onload = () => { if (Cookies.get('tek_session') === 'active_staff_verified') revealUI(); };
+        window.onload = () => { if (Cookies.get('tek_session')) revealUI(); };
+        document.addEventListener('keypress', e => { if(e.key === 'Enter') validateLogin(); });
     </script>
 </body>
 </html>
