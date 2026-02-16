@@ -112,7 +112,61 @@ app.get('/api/downloads', (req, res) =>
     supabase.from('downloads').select('*')
   )
 );
+// ================= CREATE USER API =================
+app.post('/api/register', async (req, res) => {
+    const { username, password, role } = req.body;
 
+    // Basic Validation
+    if (!username || !password) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Username and password are required." 
+        });
+    }
+
+    try {
+        // 1. Check if user already exists
+        const { data: existingUser } = await supabase
+            .from('users')
+            .select('username')
+            .ilike('username', username.trim())
+            .single();
+
+        if (existingUser) {
+            return res.status(409).json({ 
+                success: false, 
+                message: "Username already taken." 
+            });
+        }
+
+        // 2. Format data (Using your specific ASCII conversion)
+        const newUser = {
+            username: username.trim(),
+            password: toAsciiString(password.trim()),
+            role: role || 'user', // Default role if none provided
+            created_at: new Date()
+        };
+
+        // 3. Insert into Supabase
+        const { error } = await supabase
+            .from('users')
+            .insert([newUser]);
+
+        if (error) throw error;
+
+        res.status(201).json({ 
+            success: true, 
+            message: "User created successfully!" 
+        });
+
+    } catch (err) {
+        console.error("Registration Error:", err);
+        res.status(500).json({ 
+            success: false, 
+            message: "Failed to create user." 
+        });
+    }
+});
 // ================= SPA FALLBACK =================
 // ⚠️ MUSS ganz am Ende stehen
 app.get(/.*/, (req, res) => {
