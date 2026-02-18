@@ -8,6 +8,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
     <style>
+        @font-face {
+            font-family: 'Lemon Milk';
+            src: url('https://db.onlinewebfonts.com/t/e31469850993959c5d1945657b01851e.woff2') format('woff2');
+            font-weight: bold;
+            font-style: normal;
+        }
+
         :root { --bg-dark: #000000; --accent: #3b82f6; }
         
         body {
@@ -15,6 +22,11 @@
                         url('https://cdn.discordapp.com/attachments/1051507841447501886/1472916682501521534/image-14.png?ex=6994500e&is=6992fe8e&hm=b47c8ac2a46baa5e6f331a8e876a7d25e0da8e2417760e441876bcc4b595bbe5&');
             background-size: cover; background-position: center; background-attachment: fixed;
             color: #ffffff; font-family: 'Inter', sans-serif; overflow-x: hidden; min-height: 100vh;
+        }
+
+        h1, h2, h3, .lemon {
+            font-family: 'Lemon Milk', sans-serif !important;
+            letter-spacing: 0.05em;
         }
 
         .page-view {
@@ -44,13 +56,33 @@
             border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .sirius-card:hover { border-color: rgba(59, 130, 246, 0.4); background: rgba(255, 255, 255, 0.04); transform: translateY(-4px); }
-        @keyframes rotateEarth { from { background-position: 0 0; } to { background-position: 200% 0; } }
         ::-webkit-scrollbar { width: 0px; }
 
-        /* Modal specific styles */
-        #game-modal { display: none; }
-        #game-modal.modal-active { display: flex; animation: fadeIn 0.3s ease forwards; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+/* Ensure the modal starts invisible and small */
+#game-modal { 
+    display: none; 
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+/* Base state for the inner content */
+.modal-content-wrapper {
+    opacity: 0;
+    transform: scale(0.8) translateY(40px);
+    filter: blur(15px);
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* The state when the modal is active */
+#game-modal.modal-active { 
+    opacity: 1;
+}
+
+#game-modal.modal-active .modal-content-wrapper {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+}
     </style>
 </head>
 <body>
@@ -59,12 +91,12 @@
         <div class="relative w-full max-w-[900px] h-fit min-h-[500px] flex overflow-hidden bg-zinc-900/50 border border-white/10 rounded-3xl shadow-2xl">
             <div class="w-full lg:w-[450px] flex flex-col justify-center px-12 py-16 bg-black/20">
                 <div class="reveal visible">
-                    <h1 class="text-3xl font-black tracking-tighter mb-1 uppercase text-white">Tek Intra</h1>
+                    <h1 class="text-3xl font-black mb-1 uppercase text-white">Tek Intra</h1>
                     <p class="text-zinc-500 text-[10px] mb-8 tracking-widest uppercase">Login to your account</p>
                     <div class="space-y-3">
                         <input type="text" id="user-input" placeholder="Username" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs focus:border-blue-500 outline-none text-white transition-all placeholder:text-zinc-600">
                         <input type="password" id="pass-input" placeholder="Password" class="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs focus:border-blue-500 outline-none text-white transition-all placeholder:text-zinc-600">
-                        <button id="auth-btn" onclick="validateLogin()" class="w-full py-4 bg-white text-black rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all active:scale-95 mt-2">Login</button>
+                        <button id="auth-btn" onclick="validateLogin()" class="lemon w-full py-4 bg-white text-black rounded-2xl text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all active:scale-95 mt-2">Login</button>
                     </div>
                     <p id="login-err" class="text-red-500 text-[9px] mt-4 uppercase font-bold opacity-0 transition-opacity text-center">Access Denied</p>
                 </div>
@@ -78,14 +110,14 @@
 
     <div id="main-content" class="hidden opacity-0 transition-opacity duration-1000">
         <nav class="fixed top-5 left-1/2 -translate-x-1/2 w-[90%] max-w-5xl z-[100] flex items-center justify-between px-8 py-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full">
-            <span class="text-xs font-black tracking-tighter text-white flex items-center gap-2">
+            <span class="lemon text-xs text-white flex items-center gap-2">
                 <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div> TEK INTRA
             </span>
             <div class="flex items-center gap-8">
                 <button onclick="showPage('home')" id="nav-home" class="nav-link active">Home</button>
                 <button onclick="showPage('projects')" id="nav-projects" class="nav-link">Games</button>
                 <button onclick="showPage('downloads')" id="nav-downloads" class="nav-link">Assets</button>
-                <button onclick="logout()" class="text-[9px] font-bold text-red-500 hover:text-red-400 uppercase tracking-widest transition-colors ml-2">Exit</button>
+                <button onclick="logout()" class="lemon text-[9px] text-red-500 hover:text-red-400 uppercase tracking-widest transition-colors ml-2">Exit</button>
             </div>
         </nav>
 
@@ -93,27 +125,27 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
                 <div class="lg:col-span-7">
                     <div class="mb-12 reveal">
-                        <h3 id="welcome-user" class="text-blue-500 text-xs font-black uppercase tracking-[0.4em] mb-4">Welcome back, Agent</h3>
-                        <h1 class="text-6xl lg:text-8xl font-black tracking-tighter text-white mb-6 leading-none">TEK Studios <br><span class="text-zinc-600">INTRA</span></h1>
+                        <h3 id="welcome-user" class="text-blue-500 text-xs uppercase tracking-[0.4em] mb-4">Welcome back, Agent</h3>
+                        <h1 class="text-6xl lg:text-8xl text-white mb-6 leading-none uppercase">TEK Studios <br><span class="text-zinc-600">INTRA</span></h1>
                         <p class="text-zinc-400 text-lg max-w-md leading-relaxed border-l-2 border-blue-500 pl-6">The next generation hub of TEK Studios.</p>
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-12">
                         <div class="sirius-card p-6 rounded-2xl reveal">
-                            <p class="text-[9px] text-zinc-500 uppercase font-bold mb-1">Network Latency</p>
-                            <p id="stat-latency" class="text-xl font-black text-blue-500">--ms</p>
+                            <p class="lemon text-[9px] text-zinc-500 uppercase mb-1">Network Latency</p>
+                            <p id="stat-latency" class="lemon text-xl text-blue-500">--ms</p>
                         </div>
                         <div class="sirius-card p-6 rounded-2xl reveal">
-                            <p class="text-[9px] text-zinc-500 uppercase font-bold mb-1">Active Projects</p>
-                            <p id="stat-projects" class="text-xl font-black text-white">0</p>
+                            <p class="lemon text-[9px] text-zinc-500 uppercase mb-1">Active Projects</p>
+                            <p id="stat-projects" class="lemon text-xl text-white">0</p>
                         </div>
                         <div class="sirius-card p-6 rounded-2xl reveal">
-                            <p class="text-[9px] text-zinc-500 uppercase font-bold mb-1">Authenticated User</p>
-                            <p id="stat-user-identity" class="text-xl font-black text-green-500 uppercase tracking-tighter">Guest</p>
+                            <p class="lemon text-[9px] text-zinc-500 uppercase mb-1">Auth Identity</p>
+                            <p id="stat-user-identity" class="lemon text-xl text-green-500 uppercase">Guest</p>
                         </div>
                     </div>
                 </div>
                 <div class="lg:col-span-5">
-                    <h2 class="text-xs font-black uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-4">
+                    <h2 class="text-xs uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-4">
                         <span class="w-12 h-[1px] bg-zinc-800"></span> Recent news
                     </h2>
                     <div id="news-grid" class="space-y-4"></div>
@@ -122,30 +154,32 @@
         </main>
 
         <main id="page-projects" class="page-view pt-48 px-16 max-w-7xl mx-auto pb-20">
-            <h2 class="text-5xl font-black mb-12 tracking-tighter reveal">INTRA <span class="text-blue-500">| GAMES</span></h2>
+            <h2 class="text-5xl mb-12 uppercase reveal">INTRA <span class="text-blue-500">| GAMES</span></h2>
             <div id="game-grid" class="grid grid-cols-1 md:grid-cols-4 gap-6"></div>
         </main>
 
         <main id="page-downloads" class="page-view pt-48 px-16 max-w-7xl mx-auto pb-20">
-            <h2 class="text-5xl font-black mb-12 tracking-tighter reveal">INTRA <span class="text-blue-500">| ASSETS</span></h2>
+            <h2 class="text-5xl mb-12 uppercase reveal">INTRA <span class="text-blue-500">| ASSETS</span></h2>
             <div id="downloads-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
         </main>
     </div>
 
-    <div id="game-modal" class="fixed inset-0 z-[1000] items-center justify-center p-6 bg-black/90 backdrop-blur-sm">
-        <div class="sirius-card w-full max-w-3xl rounded-3xl overflow-hidden relative border-white/20">
-            <button onclick="closeModal()" class="absolute top-6 right-6 z-50 text-white/50 hover:text-white text-xs font-bold uppercase tracking-widest">Close [ESC]</button>
-            <div class="grid grid-cols-1 md:grid-cols-2">
-                <div class="h-64 md:h-auto overflow-hidden bg-zinc-900">
+    <div id="game-modal" class="fixed inset-0 z-[1000] items-center justify-center p-4 md:p-12 bg-black/95 backdrop-blur-md">
+        <div class="modal-content-wrapper sirius-card w-full max-w-6xl rounded-[40px] overflow-hidden relative border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+            <button onclick="closeModal()" class="lemon absolute top-8 right-8 z-50 text-white/30 hover:text-white text-[10px] uppercase tracking-[0.3em] transition-all bg-white/5 px-6 py-2 rounded-full border border-white/10">Close Window</button>
+            <div class="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
+                <div class="relative h-80 lg:h-auto overflow-hidden bg-zinc-900">
                     <img id="modal-img" src="" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-black/80 via-transparent to-transparent"></div>
                 </div>
-                <div class="p-10 flex flex-col justify-center">
-                    <div id="modal-status-badge" class="flex items-center gap-2 mb-4">
-                        <div id="modal-status-dot" class="w-2 h-2 rounded-full"></div>
-                        <span id="modal-status-text" class="text-[10px] font-black uppercase tracking-widest"></span>
+                <div class="p-12 md:p-20 flex flex-col justify-center bg-black/40">
+                    <div id="modal-status-badge" class="flex items-center gap-3 mb-6">
+                        <div id="modal-status-dot" class="w-3 h-3 rounded-full shadow-[0_0_10px_currentColor]"></div>
+                        <span id="modal-status-text" class="lemon text-xs uppercase tracking-[0.4em]"></span>
                     </div>
-                    <h2 id="modal-title" class="text-4xl font-black tracking-tighter mb-4 text-white uppercase"></h2>
-                    <p id="modal-desc" class="text-zinc-400 text-sm leading-relaxed mb-8"></p>
+                    <h2 id="modal-title" class="text-5xl md:text-7xl mb-8 text-white uppercase leading-none"></h2>
+                    <div class="w-20 h-1 bg-blue-500 mb-8"></div>
+                    <p id="modal-desc" class="text-zinc-400 text-lg leading-relaxed font-medium max-w-xl"></p>
                 </div>
             </div>
         </div>
@@ -169,7 +203,7 @@
                     Cookies.set('tek_session', 'verified', { expires: 1 });
                     revealUI();
                 } else showError(data.message || "Invalid Credentials");
-            } catch (e) { showError("Server Error"); } finally { btn.innerText = "Authenticate"; btn.disabled = false; }
+            } catch (e) { showError("Server Error"); } finally { btn.innerText = "LOGIN"; btn.disabled = false; }
         }
 
         function showError(msg) {
@@ -228,8 +262,8 @@
         function render(news, games, dls) {
             document.getElementById('news-grid').innerHTML = news.map(n => `
                 <div class="sirius-card p-6 rounded-2xl reveal">
-                    <span class="text-[8px] font-black text-blue-500 uppercase tracking-[0.2em] mb-2 block">${new Date(n.created_at).toLocaleDateString()}</span>
-                    <h4 class="font-bold text-sm mb-2 uppercase">${n.title}</h4>
+                    <span class="lemon text-[8px] text-blue-500 uppercase tracking-[0.2em] mb-2 block">${new Date(n.created_at).toLocaleDateString()}</span>
+                    <h4 class="lemon font-bold text-sm mb-2 uppercase">${n.title}</h4>
                     <p class="text-[10px] text-zinc-500 leading-relaxed">${n.content || ''}</p>
                 </div>`).join('');
 
@@ -240,10 +274,10 @@
                     <div class="h-32 bg-zinc-900 rounded-xl overflow-hidden mb-4 relative">
                         <img src="${g.imageurl}" class="w-full h-full object-cover opacity-40 group-hover:opacity-100 transition-all duration-700 group-hover:scale-110">
                     </div>
-                    <h4 class="font-bold text-[11px] mb-2 uppercase tracking-tighter">${g.title}</h4>
+                    <h4 class="lemon font-bold text-[11px] mb-2 uppercase tracking-tighter">${g.title}</h4>
                     <div class="flex items-center gap-2">
                         <div class="w-1 h-1 rounded-full animate-pulse" style="background-color:${s.color}"></div>
-                        <span class="text-[8px] font-black uppercase" style="color:${s.color}">${s.label}</span>
+                        <span class="lemon text-[8px] uppercase" style="color:${s.color}">${s.label}</span>
                     </div>
                 </div>`;
             }).join('');
@@ -251,33 +285,50 @@
             document.getElementById('downloads-grid').innerHTML = dls.map(d => `
                 <div class="sirius-card p-6 rounded-2xl flex items-center justify-between reveal">
                     <div>
-                        <h4 class="font-bold text-[10px] text-zinc-300 uppercase">${d.name}</h4>
+                        <h4 class="lemon text-[10px] text-zinc-300 uppercase">${d.name}</h4>
                         <p class="text-[8px] text-zinc-600 font-mono">${d.version || 'STABLE'}</p>
                     </div>
-                    <a href="${d.url}" class="bg-white text-black text-[8px] font-black px-4 py-2 rounded-lg uppercase hover:bg-blue-600 hover:text-white transition-all">Download</a>
+                    <a href="${d.url}" class="lemon bg-white text-black text-[8px] px-4 py-2 rounded-lg uppercase hover:bg-blue-600 hover:text-white transition-all">Download</a>
                 </div>`).join('');
         }
+function openModal(index) {
+    const game = gameCache[index];
+    if(!game) return;
+    
+    // Set content
+    const s = statusMap[game.status?.toLowerCase()] || statusMap.offline;
+    document.getElementById('modal-img').src = game.imageurl;
+    document.getElementById('modal-title').innerText = game.title;
+    document.getElementById('modal-desc').innerText = game.description || "Project specs encrypted.";
+    document.getElementById('modal-status-text').innerText = s.label;
+    document.getElementById('modal-status-text').style.color = s.color;
+    document.getElementById('modal-status-dot').style.backgroundColor = s.color;
+    
+    const modal = document.getElementById('game-modal');
+    
+    // STEP 1: Make it exist in the DOM layout
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
 
-        function openModal(index) {
-            const game = gameCache[index];
-            if(!game) return;
-            const s = statusMap[game.status?.toLowerCase()] || statusMap.offline;
-            
-            document.getElementById('modal-img').src = game.imageurl;
-            document.getElementById('modal-title').innerText = game.title;
-            document.getElementById('modal-desc').innerText = game.description || "No transmission data available for this project. Secure link established.";
-            document.getElementById('modal-status-text').innerText = s.label;
-            document.getElementById('modal-status-text').style.color = s.color;
-            document.getElementById('modal-status-dot').style.backgroundColor = s.color;
-            
-            document.getElementById('game-modal').classList.add('modal-active');
-            document.body.style.overflow = 'hidden';
-        }
+    // STEP 2: Force a reflow and trigger animation
+    // Using a tiny timeout is the most reliable way across all browsers
+    setTimeout(() => {
+        modal.classList.add('modal-active');
+    }, 10); 
+}
 
-        function closeModal() {
-            document.getElementById('game-modal').classList.remove('modal-active');
-            document.body.style.overflow = 'auto';
-        }
+function closeModal() {
+    const modal = document.getElementById('game-modal');
+    
+    // STEP 1: Remove the animation class
+    modal.classList.remove('modal-active');
+    
+    // STEP 2: Wait for transition to finish (600ms) then hide display
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }, 600);
+}
 
         function showPage(id) {
             const current = document.querySelector('.page-view.active-view');
