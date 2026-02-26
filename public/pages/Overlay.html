@@ -2,20 +2,19 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Spotify Liquid Glass Ultra</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800&display=swap" rel="stylesheet">
+    <title>Spotify Border Progress</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --accent: #1ed760;
-            --accent-glow: rgba(30, 215, 96, 0.4);
-            --bg-glass: rgba(15, 15, 15, 0.75);
-            --border-white: rgba(255, 255, 255, 0.12);
+            --text-main: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.6);
+            --border-bg: rgba(255, 255, 255, 0.1);
         }
 
         body {
             margin: 0;
-            padding: 0;
-            background: transparent;
+            background: transparent; /* Kein Hintergrund */
             font-family: 'Plus Jakarta Sans', sans-serif;
             display: flex;
             justify-content: center;
@@ -24,136 +23,126 @@
             overflow: hidden;
         }
 
-        /* Das Widget-Gehäuse */
         #spotify-widget {
             display: flex;
             align-items: center;
-            width: 520px; /* Perfekte Goldene Mitte */
-            height: 110px;
-            padding: 0 24px;
             gap: 20px;
-            
-            background: var(--bg-glass);
-            backdrop-filter: blur(40px) saturate(180%);
-            -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: 1px solid var(--border-white);
-            border-radius: 24px;
-            
-            /* Einblend-Animation (Spring Physics) */
+            padding: 10px;
             opacity: 0;
-            transform: scale(0.8) translateY(40px);
-            transition: all 0.9s cubic-bezier(0.17, 0.89, 0.32, 1.28);
-            will-change: transform, opacity;
+            transform: translateX(-20px);
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         #spotify-widget.visible {
             opacity: 1;
-            transform: scale(1) translateY(0);
+            transform: translateX(0);
         }
 
-        /* Cover Art mit Float-Effekt */
-        .cover-container {
-            width: 78px;
-            height: 78px;
-            flex-shrink: 0;
-            perspective: 1000px;
+        /* Container für das Bild mit dem Rahmen-Effekt */
+        .cover-wrapper {
+            position: relative;
+            width: 85px;
+            height: 85px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Der statische Hintergrund-Ring/Rahmen */
+        .border-ring {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 18px;
+            border: 3px solid var(--border-bg);
+            box-sizing: border-box;
+        }
+
+        /* Der animierte Fortschritts-Rahmen (SVG) */
+        .progress-svg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 85px;
+            height: 85px;
+            transform: rotate(-90deg);
+        }
+
+        .progress-svg rect {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 340; /* Umfang des Rechtecks */
+            stroke-dashoffset: 340;
+            transition: stroke-dashoffset 0.5s linear;
         }
 
         #album-cover {
-            width: 100%;
-            height: 100%;
-            border-radius: 14px;
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
             object-fit: cover;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            transition: transform 0.5s ease;
+            z-index: 2;
         }
 
-        /* Text-Inhalte */
+        /* Info Bereich */
         .info {
-            flex: 1;
-            min-width: 0;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            min-width: 150px;
+            max-width: 300px;
         }
 
         #track-title {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 800;
-            color: white;
+            color: var(--text-main);
             margin: 0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            letter-spacing: -0.5px;
+        }
+
+        .divider {
+            height: 2px;
+            width: 0;
+            background: var(--accent);
+            margin: 6px 0;
+            border-radius: 2px;
+            transition: width 1s ease-in-out;
+        }
+
+        #spotify-widget.visible .divider {
+            width: 40px; /* Kompakte Trennlinie */
         }
 
         #artist-name {
             font-size: 14px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.5);
-            margin: 2px 0 14px 0;
+            font-weight: 500;
+            color: var(--text-dim);
+            margin: 0;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-
-        /* Der flüssige Progress-Balken */
-        .progress-rail {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        #progress-bar {
-            height: 100%;
-            width: 100%;
-            background: var(--accent);
-            border-radius: 10px;
-            transform-origin: left;
-            transform: scaleX(0); /* Startet bei 0 */
-            will-change: transform;
-            
-            /* Liquid Glow Shader */
-            box-shadow: 0 0 15px var(--accent-glow);
-            background: linear-gradient(90deg, #1db954, #1ed760, #1db954);
-            background-size: 200% 100%;
-            animation: fluidShimmer 3s linear infinite;
-        }
-
-        /* Kleiner Glanzpunkt am Ende des Balkens */
-        #progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0; right: 0;
-            height: 100%; width: 10px;
-            background: white;
-            filter: blur(4px);
-            opacity: 0.4;
-        }
-
-        @keyframes fluidShimmer {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 200% 50%; }
         }
     </style>
 </head>
 <body>
 
     <div id="spotify-widget">
-        <div class="cover-container">
+        <div class="cover-wrapper">
+            <div class="border-ring"></div>
+            <svg class="progress-svg">
+                <rect id="progress-rect" x="1.5" y="1.5" width="82" height="82" rx="16.5" />
+            </svg>
             <img id="album-cover" src="" alt="">
         </div>
         <div class="info">
-            <h1 id="track-title">Warte auf Musik...</h1>
-            <p id="artist-name">Spotify</p>
-            <div class="progress-rail">
-                <div id="progress-bar"></div>
-            </div>
+            <div id="track-title">Warte...</div>
+            <div class="divider"></div>
+            <div id="artist-name">Spotify</div>
         </div>
     </div>
 
@@ -163,11 +152,11 @@
         const title = document.getElementById('track-title');
         const artist = document.getElementById('artist-name');
         const cover = document.getElementById('album-cover');
-        const progressBar = document.getElementById('progress-bar');
+        const progressRect = document.getElementById('progress-rect');
+        const maxOffset = 340; // Entspricht dem stroke-dasharray
 
         let spotifyData = null;
         let lastTrackId = null;
-        let lerpedProgress = 0; // Für ultra-sanftes Gleiten
 
         function initLanyard() {
             const socket = new WebSocket('wss://api.lanyard.rest/socket');
@@ -198,11 +187,11 @@
                         widget.classList.remove('visible');
                         setTimeout(() => {
                             title.innerText = s.song;
-                            artist.innerText = s.artist.replace(/;/g, ', ');
+                            artist.innerText = s.artist;
                             cover.src = s.album_art_url;
                             widget.classList.add('visible');
                             lastTrackId = s.track_id;
-                        }, 500);
+                        }, 400);
                     }
                 }
             };
@@ -210,27 +199,22 @@
             socket.onclose = () => setTimeout(initLanyard, 5000);
         }
 
-        // Der 60Hz - 144Hz Render Loop
-        function frame() {
+        function updateProgress() {
             if (spotifyData && spotifyData.timestamps) {
                 const now = Date.now();
                 const start = spotifyData.timestamps.start;
                 const end = spotifyData.timestamps.end;
+                const progress = Math.min(Math.max((now - start) / (end - start), 0), 1);
                 
-                // Ziel-Fortschritt (0 bis 1)
-                const target = Math.min(Math.max((now - start) / (end - start), 0), 1);
-                
-                // Linear Interpolation (Lerp) für Smoothness
-                // Falls die API springt, gleitet der Balken trotzdem sanft weiter
-                lerpedProgress += (target - lerpedProgress) * 0.1; 
-                
-                progressBar.style.transform = `scaleX(${lerpedProgress})`;
+                // Berechne den Offset für den Rahmen (340 bis 0)
+                const offset = maxOffset - (progress * maxOffset);
+                progressRect.style.strokeDashoffset = offset;
             }
-            requestAnimationFrame(frame);
+            requestAnimationFrame(updateProgress);
         }
 
         initLanyard();
-        frame();
+        updateProgress();
     </script>
 </body>
 </html>
