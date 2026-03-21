@@ -2,219 +2,404 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Spotify Border Progress</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;800&display=swap" rel="stylesheet">
-    <style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEK Soundlay Premium | OBS Overlay</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+<style>
         :root {
-            --accent: #1ed760;
-            --text-main: #ffffff;
-            --text-dim: rgba(255, 255, 255, 0.6);
-            --border-bg: rgba(255, 255, 255, 0.1);
+            --tek-blue: #3b82f6;
+            --tek-bg: #070707;
+            --tek-border: rgba(255, 255, 255, 0.12);
+            --tek-spring: cubic-bezier(0.19, 1, 0.22, 1);
+            --tek-soft: cubic-bezier(0.4, 0, 0.2, 1);
+            --ring-size: 213.6;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 1920px;
+            height: 150px;
+            background: transparent !important;
+            overflow: hidden !important;
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
         body {
-            margin: 0;
-            background: transparent; /* Kein Hintergrund */
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
+            display: grid;
+            place-items: center start;
         }
 
-        #spotify-widget {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            padding: 10px;
-            opacity: 0;
-            transform: translateX(-20px);
-            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        #spotify-widget.visible {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        /* Container für das Bild mit dem Rahmen-Effekt */
-        .cover-wrapper {
+        #viewport {
             position: relative;
-            width: 85px;
-            height: 85px;
+            padding-left: 80px;
             display: flex;
-            justify-content: center;
             align-items: center;
-        }
-
-        /* Der statische Hintergrund-Ring/Rahmen */
-        .border-ring {
-            position: absolute;
-            top: 0; left: 0;
+            height: 150px;
             width: 100%;
-            height: 100%;
-            border-radius: 18px;
-            border: 3px solid var(--border-bg);
-            box-sizing: border-box;
         }
 
-        /* Der animierte Fortschritts-Rahmen (SVG) */
-        .progress-svg {
-            position: absolute;
-            top: 0; left: 0;
-            width: 85px;
-            height: 85px;
-            transform: rotate(-90deg);
+        /* ISLAND: Breite wird via JS gesteuert */
+        #island {
+            position: relative;
+            height: 84px;
+            width: 84px; /* Startbreite (nur Kreis) */
+            background: var(--tek-bg);
+            border: 1px solid var(--tek-border);
+            border-radius: 42px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 12px 45px rgba(0, 0, 0, 0.7);
+            opacity: 0;
+            transform: scale(0.7) translateY(20px);
+            visibility: hidden;
+            transition: 
+                width 0.8s var(--tek-spring),
+                height 0.8s var(--tek-spring),
+                transform 0.8s var(--tek-spring),
+                opacity 0.5s ease;
+            z-index: 100;
+            overflow: hidden; /* Wichtig, damit Text beim Einfahren nicht übersteht */
         }
 
-        .progress-svg rect {
-            fill: none;
-            stroke: var(--accent);
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-dasharray: 340; /* Umfang des Rechtecks */
-            stroke-dashoffset: 340;
-            transition: stroke-dashoffset 0.5s linear;
+        #island.active {
+            opacity: 1 !important;
+            transform: scale(1) translateY(0) !important;
+            visibility: visible !important;
         }
 
-        #album-cover {
-            width: 70px;
-            height: 70px;
-            border-radius: 12px;
+        #visual-core {
+            width: 84px;
+            height: 84px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 110;
+        }
+
+        #media-asset {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
             object-fit: cover;
-            z-index: 2;
+            border: 2px solid #000;
+            background: #111;
+            z-index: 5;
         }
 
-        /* Info Bereich */
-        .info {
+        .progress-ring {
+            position: absolute;
+            transform: rotate(-90deg);
+            z-index: 4;
+        }
+
+        #progress-bar {
+            stroke: var(--tek-blue);
+            stroke-width: 4;
+            fill: none;
+            stroke-dasharray: var(--ring-size);
+            stroke-dashoffset: var(--ring-size);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.4s linear;
+            filter: drop-shadow(0 0 4px var(--tek-blue));
+        }
+
+        /* CONTENT LAYER: Absolute Positionierung relativ zum Island */
+        .content-layer {
+            position: absolute;
+            left: 84px; /* Beginnt nach dem Kreis */
+            padding-right: 40px; /* Sicherheitsabstand nach rechts */
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            min-width: 150px;
-            max-width: 300px;
-        }
-
-        #track-title {
-            font-size: 18px;
-            font-weight: 800;
-            color: var(--text-main);
-            margin: 0;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateX(-15px) scale(0.95);
+            transition: 
+                opacity 0.4s var(--tek-soft), 
+                transform 0.6s var(--tek-spring);
         }
 
-        .divider {
-            height: 2px;
-            width: 0;
-            background: var(--accent);
-            margin: 6px 0;
-            border-radius: 2px;
-            transition: width 1s ease-in-out;
+        .content-layer.visible {
+            opacity: 1;
+            transform: translateX(0) scale(1);
         }
 
-        #spotify-widget.visible .divider {
-            width: 40px; /* Kompakte Trennlinie */
+        .label-top {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--tek-blue);
+            margin-bottom: -2px;
         }
 
-        #artist-name {
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-dim);
-            margin: 0;
+        .label-main {
+            font-size: 26px;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+
+        .label-sub {
+            font-size: 15px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.45);
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        #ripple {
+            position: absolute;
+            left: 80px;
+            width: 84px;
+            height: 84px;
+            border: 2px solid var(--tek-blue);
+            border-radius: 50%;
+            opacity: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .animate-ripple {
+            animation: ripple-out 0.9s ease-out forwards;
+        }
+
+        @keyframes ripple-out {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(2.4); opacity: 0; }
+        }
+
+        /* RULER: Versteckte Elemente zum Messen der Textbreite */
+        #ruler {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            visibility: hidden;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            display: flex;
+            flex-direction: column;
         }
+        /* Diese Styles müssen exakt den echten Labels entsprechen */
+        #ruler-title { font-size: 26px; font-weight: 900; line-height: 1.1; }
+        #ruler-artist { font-size: 15px; font-weight: 600; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <div id="spotify-widget">
-        <div class="cover-wrapper">
-            <div class="border-ring"></div>
-            <svg class="progress-svg">
-                <rect id="progress-rect" x="1.5" y="1.5" width="82" height="82" rx="16.5" />
-            </svg>
-            <img id="album-cover" src="" alt="">
-        </div>
-        <div class="info">
-            <div id="track-title">Warte...</div>
-            <div class="divider"></div>
-            <div id="artist-name">Spotify</div>
+    <div id="ruler">
+        <span id="ruler-title"></span>
+        <span id="ruler-artist"></span>
+    </div>
+
+    <div id="viewport">
+        <div id="ripple"></div>
+        <div id="island">
+            <div id="visual-core">
+                <svg class="progress-ring" width="84" height="84">
+                    <circle cx="42" cy="42" r="34" stroke="rgba(255,255,255,0.08)" stroke-width="4" fill="none" />
+                    <circle id="progress-bar" cx="42" cy="42" r="34" />
+                </svg>
+                <img id="media-asset" src="" alt="">
+            </div>
+
+            <div id="layer-auth" class="content-layer">
+                <span class="label-top">Authorization</span>
+                <span id="user-display" class="label-main">User</span>
+            </div>
+
+            <div id="layer-music" class="content-layer">
+                <span id="music-title" class="label-main">Title</span>
+                <span id="music-artist" class="label-sub">Artist</span>
+            </div>
+
+            <div id="layer-idle" class="content-layer">
+                <span class="label-top">Status</span>
+                <span class="label-main">System Ready</span>
+            </div>
         </div>
     </div>
 
     <script>
-        const DISCORD_ID = '865259965718855710';
-        const widget = document.getElementById('spotify-widget');
-        const title = document.getElementById('track-title');
-        const artist = document.getElementById('artist-name');
-        const cover = document.getElementById('album-cover');
-        const progressRect = document.getElementById('progress-rect');
-        const maxOffset = 340; // Entspricht dem stroke-dasharray
+        const CONFIG = {
+            id: new URLSearchParams(window.location.search).get('id'),
+            ringCircumference: 213.6,
+            bootDuration: 4000,
+            transitionDelay: 600
+        };
 
-        let spotifyData = null;
-        let lastTrackId = null;
+        let STATE = {
+            isActive: false,
+            isBooting: false,
+            currentView: 'none',
+            spotify: null,
+            user: null,
+            lastTrackId: null,
+            heartbeatInterval: null
+        };
 
-        function initLanyard() {
-            const socket = new WebSocket('wss://api.lanyard.rest/socket');
-
-            socket.onopen = () => {
-                socket.send(JSON.stringify({ op: 2, d: { subscribe_to_id: DISCORD_ID } }));
-            };
-
-            socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                
-                if (data.op === 1) {
-                    setInterval(() => socket.send(JSON.stringify({ op: 3 })), data.d.heartbeat_interval);
-                }
-
-                if (data.t === 'INIT_STATE' || data.t === 'PRESENCE_UPDATE') {
-                    const s = data.d.spotify;
-                    
-                    if (!s) {
-                        widget.classList.remove('visible');
-                        spotifyData = null;
-                        return;
-                    }
-
-                    spotifyData = s;
-
-                    if (s.track_id !== lastTrackId) {
-                        widget.classList.remove('visible');
-                        setTimeout(() => {
-                            title.innerText = s.song;
-                            artist.innerText = s.artist;
-                            cover.src = s.album_art_url;
-                            widget.classList.add('visible');
-                            lastTrackId = s.track_id;
-                        }, 400);
-                    }
-                }
-            };
-
-            socket.onclose = () => setTimeout(initLanyard, 5000);
-        }
-
-        function updateProgress() {
-            if (spotifyData && spotifyData.timestamps) {
-                const now = Date.now();
-                const start = spotifyData.timestamps.start;
-                const end = spotifyData.timestamps.end;
-                const progress = Math.min(Math.max((now - start) / (end - start), 0), 1);
-                
-                // Berechne den Offset für den Rahmen (340 bis 0)
-                const offset = maxOffset - (progress * maxOffset);
-                progressRect.style.strokeDashoffset = offset;
+        const DOM = {
+            island: document.getElementById('island'),
+            ripple: document.getElementById('ripple'),
+            asset: document.getElementById('media-asset'),
+            bar: document.getElementById('progress-bar'),
+            layers: {
+                auth: document.getElementById('layer-auth'),
+                music: document.getElementById('layer-music'),
+                idle: document.getElementById('layer-idle')
+            },
+            text: {
+                user: document.getElementById('user-display'),
+                title: document.getElementById('music-title'),
+                artist: document.getElementById('music-artist'),
+                rTitle: document.getElementById('ruler-title'),
+                rArtist: document.getElementById('ruler-artist')
             }
-            requestAnimationFrame(updateProgress);
-        }
+        };
 
-        initLanyard();
-        updateProgress();
+        const updateIslandWidth = (title, sub) => {
+            DOM.text.rTitle.textContent = title || "";
+            DOM.text.rArtist.textContent = sub || "";
+            const measure = Math.max(DOM.text.rTitle.offsetWidth, DOM.text.rArtist.offsetWidth);
+            const targetWidth = measure > 0 ? (84 + measure + 50) : 84;
+            DOM.island.style.width = `${targetWidth}px`;
+        };
+
+        const switchLayer = (newLayer, title, sub) => {
+            updateIslandWidth(title, sub);
+            Object.values(DOM.layers).forEach(l => l.classList.remove('visible'));
+            setTimeout(() => {
+                if(DOM.layers[newLayer]) DOM.layers[newLayer].classList.add('visible');
+                STATE.currentView = newLayer;
+            }, 350);
+        };
+
+        const handleBoot = async (data) => {
+            if (STATE.isActive || STATE.isBooting) return;
+            STATE.isBooting = true;
+            STATE.isActive = true;
+
+            // User Daten setzen
+            STATE.user = data.discord_user;
+            const avatarUrl = STATE.user.avatar ? 
+                `https://cdn.discordapp.com/avatars/${CONFIG.id}/${STATE.user.avatar}.png?size=128` : 
+                "https://cdn.discordapp.com/embed/avatars/0.png";
+            
+            DOM.asset.src = avatarUrl;
+            const userName = STATE.user.global_name || STATE.user.username;
+            DOM.text.user.textContent = userName;
+
+            // Startsequenz
+            DOM.island.classList.add('active');
+            
+            // Zeige verbundenen Nutzer
+            setTimeout(() => {
+                switchLayer('auth', "Authorization", userName);
+            }, 600);
+
+            // Wartezeit während der User angezeigt wird
+            await new Promise(r => setTimeout(r, CONFIG.bootDuration));
+            
+            // Ripple Effekt zum Abschluss des Boots
+            DOM.ripple.classList.remove('animate-ripple');
+            void DOM.ripple.offsetWidth;
+            DOM.ripple.classList.add('animate-ripple');
+            
+            STATE.isBooting = false;
+
+            // Übergang zu Spotify oder Idle
+            if (STATE.spotify) {
+                renderSpotify(STATE.spotify);
+            } else {
+                renderIdle();
+            }
+        };
+
+        const renderSpotify = (data) => {
+            if (STATE.isBooting) return;
+            DOM.asset.src = data.album_art_url;
+            DOM.text.title.textContent = data.song;
+            DOM.text.artist.textContent = data.artist;
+            switchLayer('music', data.song, data.artist);
+            STATE.lastTrackId = data.track_id;
+        };
+
+        const renderIdle = () => {
+            if (STATE.isBooting) return;
+            switchLayer('idle', "Status", "System Ready");
+            DOM.bar.style.strokeDashoffset = CONFIG.ringCircumference;
+        };
+
+        const initLanyard = () => {
+            if (!CONFIG.id) return;
+            if(STATE.heartbeatInterval) clearInterval(STATE.heartbeatInterval);
+
+            const ws = new WebSocket('wss://api.lanyard.rest/socket');
+
+            ws.onopen = () => {
+                ws.send(JSON.stringify({
+                    op: 2,
+                    d: { subscribe_to_id: CONFIG.id }
+                }));
+            };
+
+            ws.onmessage = (msg) => {
+                const packet = JSON.parse(msg.data);
+                
+                if (packet.op === 1) {
+                    STATE.heartbeatInterval = setInterval(() => {
+                        ws.send(JSON.stringify({ op: 3 }));
+                    }, packet.d.heartbeat_interval);
+                }
+
+                if (packet.t === 'INIT_STATE' || packet.t === 'PRESENCE_UPDATE') {
+                    const d = packet.d;
+                    STATE.spotify = d.spotify || null;
+
+                    if (!STATE.isActive) {
+                        handleBoot(d);
+                    } else if (!STATE.isBooting) {
+                        if (STATE.spotify) {
+                            if (STATE.spotify.track_id !== STATE.lastTrackId) {
+                                renderSpotify(STATE.spotify);
+                            }
+                        } else if (STATE.currentView !== 'idle') {
+                            renderIdle();
+                        }
+                    }
+                }
+            };
+
+            ws.onclose = () => {
+                clearInterval(STATE.heartbeatInterval);
+                setTimeout(initLanyard, 3000);
+            };
+            
+            ws.onerror = () => ws.close();
+        };
+
+        const updateTick = () => {
+            if (STATE.spotify && STATE.isActive && !STATE.isBooting) {
+                const { start, end } = STATE.spotify.timestamps;
+                const total = end - start;
+                const elapsed = Date.now() - start;
+                const progress = Math.max(0, Math.min(1, elapsed / total));
+                const offset = CONFIG.ringCircumference - (progress * CONFIG.ringCircumference);
+                DOM.bar.style.strokeDashoffset = offset;
+            }
+            requestAnimationFrame(updateTick);
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initLanyard();
+            updateTick();
+        });
     </script>
 </body>
 </html>
