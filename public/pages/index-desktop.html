@@ -117,6 +117,7 @@
                 <button onclick="showPage('home')" id="nav-home" class="nav-link active">Home</button>
                 <button onclick="showPage('projects')" id="nav-projects" class="nav-link">Games</button>
                 <button onclick="showPage('downloads')" id="nav-downloads" class="nav-link">Assets</button>
+                <button onclick="showPage('revenue')" id="nav-revenue" class="nav-link">Revenue Breakdown</button>
                 <button onclick="logout()" class="lemon text-[9px] text-red-500 hover:text-red-400 uppercase tracking-widest transition-colors ml-2">Exit</button>
             </div>
         </nav>
@@ -158,6 +159,15 @@
             <div id="game-grid" class="grid grid-cols-1 md:grid-cols-4 gap-6"></div>
         </main>
 
+<main id="page-revenue" class="page-view pt-32 px-8 w-full pb-20">
+    <div class="mb-10 reveal">
+        <h2 class="text-5xl uppercase leading-none">INTRA <span class="text-blue-500">| REVENUE</span></h2>
+        <p class="text-zinc-500 text-[10px] tracking-[0.3em] uppercase mt-2">Agent Distribution Engine</p>
+    </div>
+    
+    <div id="revenue-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"></div>
+</main>
+
         <main id="page-downloads" class="page-view pt-48 px-16 max-w-7xl mx-auto pb-20">
             <h2 class="text-5xl mb-12 uppercase reveal">INTRA <span class="text-blue-500">| ASSETS</span></h2>
             <div id="downloads-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
@@ -188,7 +198,7 @@
     <script>
         const statusMap = { operational: { color: "#4ade80", label: "Online" }, maintenance: { color: "#fbbf24", label: "Maint" }, offline: { color: "#ef4444", label: "Offline" } };
         let gameCache = [];
-var BypassLogin = true;
+var IntraOnline = false;
 
 async function validateLogin() {
     const username = document.getElementById('user-input').value.trim();
@@ -197,8 +207,7 @@ async function validateLogin() {
 
     if (!username || !password) return showError("Input Required");
 
-    // BYPASS für lokale Preview
-    if (BypassLogin) {
+    if (IntraOnline) {
         localStorage.setItem('tek_user', username);
         Cookies.set('tek_session', 'verified', { expires: 1 });
         revealUI();
@@ -261,19 +270,25 @@ async function validateLogin() {
             }, 5000);
         }
 
-        async function loadData() {
-            try {
-                const [news, projs, dls] = await Promise.all([
-                    fetch('/api/news').then(r => r.json()).catch(() => []),
-                    fetch('/api/projects').then(r => r.json()).catch(() => []),
-                    fetch('/api/downloads').then(r => r.json()).catch(() => [])
-                ]);
-                gameCache = projs;
-                document.getElementById('stat-projects').innerText = projs.length;
-                render(news, projs, dls);
-                triggerAnims();
-            } catch (e) { triggerAnims(); }
-        }
+async function loadData() {
+    try {
+        const [news, projs, dls] = await Promise.all([
+            fetch('/api/news').then(r => r.json()).catch(() => []),
+            fetch('/api/projects').then(r => r.json()).catch(() => []),
+            fetch('/api/downloads').then(r => r.json()).catch(() => [])
+        ]);
+        gameCache = projs;
+        document.getElementById('stat-projects').innerText = projs.length;
+        
+        render(news, projs, dls);
+        renderRevenueProducts(); // <--- WICHTIG: Hier wird die Revenue-Seite gefüllt
+        
+        triggerAnims();
+    } catch (e) { 
+        renderRevenueProducts(); // Falls API fehlschlägt, trotzdem JSON laden
+        triggerAnims(); 
+    }
+}
 
         function render(news, games, dls) {
             document.getElementById('news-grid').innerHTML = news.map(n => `
@@ -332,7 +347,182 @@ function openModal(index) {
         modal.classList.add('modal-active');
     }, 10); 
 }
+const revenueData = [
+    { 
+        name: "LiSA Callbuttons", 
+        price: 50, 
+        // Die Prozente hier beziehen sich auf den 25% Agent-Pool (Summe sollte 100 sein)
+        agents: [
+            { name: "Aufzugsdienst", share: 60 }, 
+            { name: "Sinus", share: 15 }
+        ]
+    },
+        { 
+        name: "Train Displays", 
+        price: 25, 
+        // Die Prozente hier beziehen sich auf den 25% Agent-Pool (Summe sollte 100 sein)
+        agents: [
+            { name: "Aufzugsdienst", share: 10 }, 
+        ]
+    },
+            { 
+        name: "V.0.01 HQ", 
+        price: 450, 
+        // Die Prozente hier beziehen sich auf den 25% Agent-Pool (Summe sollte 100 sein)
+        agents: [
+        ]
+    },
+                { 
+        name: "DirectPath Legacy",
+        price: 35, 
+        // Die Prozente hier beziehen sich auf den 25% Agent-Pool (Summe sollte 100 sein)
+        agents: [
+        ]
+    },
+                    { 
+        name: "Silberhai. HQ",
+        price: 100, 
+        // Die Prozente hier beziehen sich auf den 25% Agent-Pool (Summe sollte 100 sein)
+        agents: [
+            { name: "Aufzugsdienst", share: 35 }
+        ]
+    },
+                        { 
+        name: "ICP Parking System",
+        price: 500, 
+        // Die Prozente hier beziehen sich auf den 25% Agent-Pool (Summe sollte 100 sein)
+        agents: [
+            { name: "Aufzugsdienst", share: 5 }
+        ]
+    },
+                            { 
+        name: "Kone Display PV2",
+        price: 500, 
+        // Die Prozente hier beziehen sich auf den 25% Agent-Pool (Summe sollte 100 sein)
+        agents: [
+        ]
+    },
+                            { 
+        name: "Thyssenkrupp Stepmodul",
+        price: 45, 
+        // Die Prozente hier beziehen sich auf den 25% Agent-Pool (Summe sollte 100 sein)
+        agents: [
+        ]
+    },
+                            { 
+        name: "Kone Basemodel",
+        price: 16, 
+        // Die Prozente hier beziehen sich auf den 25% Agent-Pool (Summe sollte 100 sein)
+        agents: [
+        ]
+    },
+                                { 
+        name: "HR Motor",
+        price: 25, 
+        // Die Prozente hier beziehen sich auf den 25% Agent-Pool (Summe sollte 100 sein)
+        agents: [
+        ]
+    },
+                                { 
+        name: "Materials",
+        price: 15, 
+        // Die Prozente hier beziehen sich auf den 25% Agent-Pool (Summe sollte 100 sein)
+        agents: [
+                        { name: "Aufzugsdienst", share: 15 },
+                        { name: "1souq", share: 15 }
+        ]
+    },
+                                    { 
+        name: "V3 HQ",
+        price: 350, 
+        // Die Prozente hier beziehen sich auf den 25% Agent-Pool (Summe sollte 100 sein)
+        agents: [
+        ]
+    },
 
+];
+function renderRevenueProducts() {
+    const grid = document.getElementById('revenue-grid');
+    if (!grid) return;
+
+    grid.innerHTML = revenueData.map(product => {
+        const grossPrice = product.price;
+        
+        // 1. Roblox Steuer (30%) - Das sieht TEK nie
+        const robloxTax = Math.floor(grossPrice * 0.30);
+        const netRevenue = grossPrice - robloxTax; 
+        
+        // 2. Agent Payouts berechnen
+        // Wir sammeln die Beträge, um sie später vom Netto abzuziehen
+        let totalDistributedToAgents = 0;
+        const agentBreakdown = product.agents.map(agent => {
+            const amount = Math.floor(netRevenue * (agent.share / 100));
+            totalDistributedToAgents += amount;
+            return { name: agent.name, share: agent.share, amount: amount };
+        });
+
+        // 3. Was für TEK Studios übrig bleibt
+        const tekNetProfit = netRevenue - totalDistributedToAgents;
+
+        return `
+        <div class="sirius-card relative group cursor-pointer overflow-hidden min-h-[350px] reveal">
+            <div class="p-8 h-full flex flex-col justify-between transition-all duration-500 group-hover:opacity-0 group-hover:scale-95">
+                <div>
+                    <p class="lemon text-[12px] text-blue-500 uppercase mb-2 tracking-widest">TEK Studios Product</p>
+                    <h3 class="lemon text-2xl text-white uppercase leading-tight">${product.name}</h3>
+                </div>
+                <div class="mt-auto">
+                    <p class="lemon text-[20px] text-zinc-500 uppercase mb-1">Price</p>
+                    <p class="lemon text-3xl text-white">${grossPrice} <span class="text-blue-500">R$</span></p>
+                                        <div class="pt-4 border-t border-blue-500/30 mt-4 bg-blue-500/5 p-3">
+                        <div class="flex justify-between items-center">
+                            <span class="lemon text-[10px] text-blue-400 uppercase font-bold">TEK Net Income</span>
+                            <span class="lemon text-lg text-white font-bold">${tekNetProfit} R$</span>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+
+            <div class="absolute inset-0 bg-zinc-900/98 backdrop-blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-center p-8 translate-y-4 group-hover:translate-y-0 border border-blue-500/20">
+                <p class="lemon text-[12px] text-blue-500 uppercase mb-4 tracking-[0.2em] border-b border-blue-500/20 pb-2">Revenue Breakdown</p>
+                
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-[10px] opacity-50">
+                        <span class="lemon uppercase">Roblox Fee (30%)</span>
+                        <span class="lemon">-${robloxTax} R$</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-center text-[10px] font-bold pb-2 border-b border-white/5">
+                        <span class="lemon text-zinc-300 uppercase">Available Net</span>
+                        <span class="lemon text-white">${netRevenue} R$</span>
+                    </div>
+
+                    <div class="pt-2 space-y-2">
+                        ${agentBreakdown.map(a => `
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-[18px] text-white font-medium leading-none">${a.name}</p>
+                                    <p class="text-[14px] text-zinc-500 uppercase mt-1">Payout (${a.share}%)</p>
+                                </div>
+                                <span class="lemon text-[11px] text-blue-400">${a.amount} R$</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="pt-4 border-t border-blue-500/30 mt-4 bg-blue-500/5 p-3">
+                        <div class="flex justify-between items-center">
+                            <span class="lemon text-[10px] text-blue-400 uppercase font-bold">TEK Net Income</span>
+                            <span class="lemon text-lg text-white font-bold">${tekNetProfit} R$</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+// Beispiel-Aufruf:
+// updateRevenuePage('LiSA Pack v2', 34);
 function closeModal() {
     const modal = document.getElementById('game-modal');
     
