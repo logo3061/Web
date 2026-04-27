@@ -1,0 +1,10 @@
+<script>
+  // Check if device is mobile
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    window.location.href = "pages/index-mobile.html";
+  } else {
+    window.location.href = "pages/index-desktop.html";
+  }
+</script>
